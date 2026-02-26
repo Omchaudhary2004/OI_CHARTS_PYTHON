@@ -8,6 +8,7 @@ Clears stored snapshots if the URL has changed (so the chart starts fresh).
 from flask import Blueprint, request, jsonify
 from database import check_and_clear_for_url_change
 from logger import log_error, log_to_file
+from session import set_session  # FIX: update global session on connect
 
 bp = Blueprint("connect", __name__)
 
@@ -29,7 +30,9 @@ def connect():
 
     try:
         was_cleared = check_and_clear_for_url_change(source_identifier)
-        log_to_file(f"[CONNECT SUCCESS] cleared={was_cleared}")
+        # FIX: update global session so APScheduler starts fetching with new credentials
+        set_session(token or None, expiry_date)
+        log_to_file(f"[CONNECT SUCCESS] cleared={was_cleared} scheduler session updated")
         return jsonify({
             "ok": True,
             "message": (

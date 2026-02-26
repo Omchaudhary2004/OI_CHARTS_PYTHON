@@ -122,6 +122,8 @@ function useDualPaneChart(containerRef, { data1, color1, id1, data2, color2, id2
   const series2Ref = useRef([]);
   const prevId1 = useRef(id1);
   const prevId2 = useRef(id2);
+  // FIX: crosshair value display — track hovered values for both panes
+  const [crosshairVals, setCrosshairVals] = useState({ v1: null, v2: null });
 
   // Create chart once
   useEffect(() => {
@@ -162,6 +164,22 @@ function useDualPaneChart(containerRef, { data1, color1, id1, data2, color2, id2
         height: el.clientHeight,
       });
       chartRef.current = chart;
+
+      // FIX: crosshair subscription — update values shown next to pane labels on hover
+      chart.subscribeCrosshairMove(param => {
+        let v1 = null, v2 = null;
+        if (param.seriesData) {
+          for (const s of series1Ref.current) {
+            const d = param.seriesData.get(s);
+            if (d?.value !== undefined) { v1 = d.value; break; }
+          }
+          for (const s of series2Ref.current) {
+            const d = param.seriesData.get(s);
+            if (d?.value !== undefined) { v2 = d.value; break; }
+          }
+        }
+        setCrosshairVals({ v1, v2 });
+      });
 
       // Resize observer
       const observer = new ResizeObserver(() => {
@@ -204,14 +222,21 @@ function useDualPaneChart(containerRef, { data1, color1, id1, data2, color2, id2
     const isInitial = series1Ref.current.length === 0;
 
     segments.forEach((seg, i) => {
+      const isLast = i === segments.length - 1;
       if (series1Ref.current[i]) {
-        series1Ref.current[i].applyOptions({ color: color1 });
+        series1Ref.current[i].applyOptions({
+          color: color1,
+          // FIX: only the last segment shows the latest-price highlight
+          lastValueVisible: isLast,
+        });
         series1Ref.current[i].setData(seg);
       } else {
         const s = chart.addSeries(LineSeries, {
           color: color1,
           lineWidth: 2,
           priceLineVisible: false,
+          // FIX: latest price highlight on last segment only (no clutter on gap charts)
+          lastValueVisible: isLast,
         }); // default pane index 0
         s.setData(seg);
         series1Ref.current.push(s);
@@ -252,8 +277,13 @@ function useDualPaneChart(containerRef, { data1, color1, id1, data2, color2, id2
     const isInitial = series2Ref.current.length === 0;
 
     segments.forEach((seg, i) => {
+      const isLast = i === segments.length - 1;
       if (series2Ref.current[i]) {
-        series2Ref.current[i].applyOptions({ color: color2 });
+        series2Ref.current[i].applyOptions({
+          color: color2,
+          // FIX: only the last segment shows the latest-price highlight
+          lastValueVisible: isLast,
+        });
         series2Ref.current[i].setData(seg);
       } else {
         const s = chart.addSeries(
@@ -262,6 +292,8 @@ function useDualPaneChart(containerRef, { data1, color1, id1, data2, color2, id2
             color: color2,
             lineWidth: 2,
             priceLineVisible: false,
+            // FIX: latest price highlight on last segment only
+            lastValueVisible: isLast,
           },
           1, // pane index 1
         );
@@ -300,7 +332,7 @@ function useDualPaneChart(containerRef, { data1, color1, id1, data2, color2, id2
     });
   }, []);
 
-  return { chartRef, handleReset, handleZoom };
+  return { chartRef, handleReset, handleZoom, crosshairVals };
 }
 
 // ── App ───────────────────────────────────────────────────────────────────────
@@ -310,6 +342,13 @@ export default function App() {
   const [showApiModal, setShowApiModal] = useState(() => !localStorage.getItem(LS_EXPIRY_KEY));
   const [tokenDraft, setTokenDraft] = useState(() => localStorage.getItem(LS_TOKEN_KEY) || '');
   const [expiryDraft, setExpiryDraft] = useState(() => localStorage.getItem(LS_EXPIRY_KEY) || '');
+  const [expiryDraftError, setExpiryDraftError] = useState(''); // FIX: date format validation
+  // FIX: token expiry warning — show banner if user connected on a previous day
+  const todayIST = new Date(Date.now() + 5.5 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const [tokenExpiredWarning, setTokenExpiredWarning] = useState(
+    () => !!localStorage.getItem(LS_EXPIRY_KEY) &&
+      localStorage.getItem('oi_connect_date') !== todayIST
+  );
 
   const [allIndicators, setAllIndicators] = useState(BUILTIN_INDICATORS);
   const [ind1, setInd1] = useState('nifty_price');
@@ -326,8 +365,14 @@ export default function App() {
   const [newIndFormula, setNewIndFormula] = useState('');
   const [addError, setAddError] = useState('');
 
-  const pollTimer = useRef(null);
+  const pollTimeoutRef = useRef(null);  // FIX: setTimeout ref instead of setInterval
+  const isPollingRef = useRef(false);   // FIX: lock prevents double-entry
+  const tokenRef = useRef('');
+  const expiryRef = useRef('');
   const containerRef = useRef(null);
+
+  const [backendOffline, setBackendOffline] = useState(false);
+  const failCountRef = useRef(0);
 
   // ── Derive series data ──────────────────────────────────────────────────
   const getSeriesData = useCallback((indValue) => {
@@ -343,13 +388,27 @@ export default function App() {
   const data2 = hasPane2 ? getSeriesData(ind2) : [];
 
   // ── Single chart hook ───────────────────────────────────────────────────
-  const { handleReset, handleZoom } = useDualPaneChart(containerRef, {
+  const { chartRef, handleReset, handleZoom, crosshairVals } = useDualPaneChart(containerRef, {
     data1,
     color1: ind1Meta?.color || '#2196f3',
+    id1: ind1,
     data2,
     color2: ind2Meta?.color || '#9c27b0',
+    id2: ind2,
     hasPane2,
   });
+
+  // FIX: track pane 1 height so pane 2 label follows the separator
+  const [pane1Height, setPane1Height] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => {
+      try {
+        const panes = chartRef.current?.panes?.();
+        if (panes?.[0]) setPane1Height(panes[0].getHeight());
+      } catch { }
+    }, 150);
+    return () => clearInterval(id);
+  }, [chartRef]);
 
   // ── Load custom indicators ──────────────────────────────────────────────
   const loadCustomIndicators = useCallback(async () => {
@@ -381,50 +440,123 @@ export default function App() {
 
   const doPoll = useCallback(async (token, expiry) => {
     try {
+      // FIX: 20s abort — prevents a slow/hanging backend from blocking all future polls forever
       const resp = await fetch(`${BACKEND_BASE}/api/process`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token, expiry_date: expiry }),
+        signal: AbortSignal.timeout(20_000),
       });
       if (!resp.ok) {
         const j = await resp.json().catch(() => ({}));
         throw new Error(j.error || `HTTP ${resp.status}`);
       }
       const data = await resp.json();
-      const now = new Date().toISOString();
-      const withTime = { ...data, timestamp: now };
       setPoints(prev => {
-        if (prev.length && prev[prev.length - 1].timestamp === now) return prev;
-        return [...prev, withTime];
+        if (prev.length && prev[prev.length - 1].timestamp === data.timestamp) return prev;
+        return [...prev, data];
       });
-      setLastUpdated(now);
+      setLastUpdated(data.timestamp); // FIX: use backend timestamp, not frontend clock
       setConnected(true);
       setStatusMsg('Live');
       setStatusType('live');
+      return true; // FIX: signal success to schedulePoll
     } catch (err) {
       setStatusType('error');
       setStatusMsg(`Error: ${err.message}`);
+      return false; // FIX: signal failure so schedulePoll can retry
     }
   }, []);
 
+  const schedulePoll = useCallback(() => {
+    if (!isPollingRef.current) return;
+    // FIX: align to clock — always fire at the next exact :00 second boundary
+    const msToNextMinute = 60_000 - (Date.now() % 60_000);
+    pollTimeoutRef.current = setTimeout(async () => {
+      if (!isPollingRef.current) return;
+      const ok = await doPoll(tokenRef.current, expiryRef.current);
+      if (!ok && isPollingRef.current) {
+        // FIX: retry once after 10s if Upstox returned an error — covers brief API hiccups
+        // within the same minute window so no data point is permanently lost
+        await new Promise(r => setTimeout(r, 10_000));
+        if (isPollingRef.current) await doPoll(tokenRef.current, expiryRef.current);
+      }
+      schedulePoll(); // next poll at the next :00 boundary
+    }, msToNextMinute);
+  }, [doPoll]);
+
   const startPolling = useCallback(async (token, expiry) => {
-    if (pollTimer.current) clearInterval(pollTimer.current);
+    // FIX: cancel any running poll before starting a new one
+    clearTimeout(pollTimeoutRef.current);
+    isPollingRef.current = false;
+    await new Promise(r => setTimeout(r, 0)); // flush
+    isPollingRef.current = true;
+    tokenRef.current = token;
+    expiryRef.current = expiry;
     setStatusMsg('Loading history...');
     setStatusType('idle');
     const historyData = await fetchHistory();
     setPoints(historyData);
-    doPoll(token, expiry);
-    pollTimer.current = setInterval(() => doPoll(token, expiry), POLL_INTERVAL_MS);
-  }, [doPoll, fetchHistory]);
+    // FIX: no immediate doPoll — schedulePoll waits for the next :00 boundary
+    schedulePoll();
+  }, [fetchHistory, schedulePoll]);
 
-  useEffect(() => () => { if (pollTimer.current) clearInterval(pollTimer.current); }, []);
+  useEffect(() => () => {
+    clearTimeout(pollTimeoutRef.current);
+    isPollingRef.current = false;
+  }, []);
+
+  // FIX: health check every 30s — show banner + auto-reconnect on recovery
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      try {
+        const r = await fetch(`${BACKEND_BASE}/health`, { signal: AbortSignal.timeout(5000) });
+        if (r.ok) {
+          if (failCountRef.current >= 2) {
+            // FIX: backend just recovered — reload history to fill the gap
+            setBackendOffline(false);
+            startPolling(tokenRef.current, expiryRef.current);
+          }
+          failCountRef.current = 0;
+        } else {
+          throw new Error('not ok');
+        }
+      } catch {
+        failCountRef.current += 1;
+        if (failCountRef.current >= 2) setBackendOffline(true);
+      }
+    }, 30_000);
+    return () => clearInterval(interval);
+  }, [startPolling]);
+
+  // FIX: visibilitychange — when user returns to the tab after browser throttling,
+  // immediately poll + realign the schedule to the next :00 boundary
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === 'visible' && isPollingRef.current) {
+        // Trigger an immediate catch-up poll, then reschedule to next :00
+        doPoll(tokenRef.current, expiryRef.current).then(() => {
+          clearTimeout(pollTimeoutRef.current);
+          schedulePoll();
+        });
+      }
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, [doPoll, schedulePoll]);
 
   // ── Handlers ────────────────────────────────────────────────────────────
   const handleApiSubmit = (e) => {
     e.preventDefault();
     const tDraft = tokenDraft.trim();
     const eDraft = expiryDraft.trim();
-    if (!eDraft) return;
+    // FIX: validate expiry date format YYYY-MM-DD before submitting
+    if (!eDraft) { setExpiryDraftError('Expiry date is required'); return; }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(eDraft)) {
+      setExpiryDraftError('Use format YYYY-MM-DD (e.g. 2025-03-27)');
+      return;
+    }
+    setExpiryDraftError('');
 
     const notifyUrlChange = async () => {
       try {
@@ -436,10 +568,14 @@ export default function App() {
       } catch { /* ignore */ }
     };
 
+    // FIX: store today's connect date so expiry warning can compare tomorrow
+    const todayStr = new Date(Date.now() + 5.5 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    localStorage.setItem('oi_connect_date', todayStr);
     localStorage.setItem(LS_TOKEN_KEY, tDraft);
     localStorage.setItem(LS_EXPIRY_KEY, eDraft);
     setUpstoxToken(tDraft);
     setExpiryDate(eDraft);
+    setTokenExpiredWarning(false);
     setShowApiModal(false);
     setPoints([]);
     notifyUrlChange().then(() => startPolling(tDraft, eDraft));
@@ -530,6 +666,47 @@ export default function App() {
   return (
     <div className="app">
 
+      {backendOffline && (
+        <div style={{
+          background: '#fee2e2', color: '#991b1b', padding: '8px 16px',
+          textAlign: 'center', fontWeight: 600, fontSize: 13
+        }}>
+          ⚠️ Backend offline — data paused. Auto-reconnecting...
+          <button onClick={() => startPolling(tokenRef.current, expiryRef.current)}
+            style={{
+              marginLeft: 12, padding: '2px 10px', cursor: 'pointer',
+              background: '#991b1b', color: '#fff', border: 'none', borderRadius: 4
+            }}>
+            Retry Now
+          </button>
+        </div>
+      )}
+
+      {/* FIX: token expiry warning — shown if user last connected on a previous day */}
+      {tokenExpiredWarning && !showApiModal && (
+        <div style={{
+          background: '#fef9c3', color: '#854d0e', padding: '8px 16px',
+          textAlign: 'center', fontWeight: 600, fontSize: 13,
+          borderBottom: '1px solid #fde047',
+        }}>
+          ⚠️ Upstox token may have expired (connected yesterday). Please reconnect with today's token.
+          <button onClick={() => { setTokenDraft(upstoxToken); setExpiryDraft(expiryDate); setShowApiModal(true); }}
+            style={{
+              marginLeft: 12, padding: '2px 10px', cursor: 'pointer',
+              background: '#854d0e', color: '#fff', border: 'none', borderRadius: 4,
+            }}>
+            Update Token
+          </button>
+          <button onClick={() => setTokenExpiredWarning(false)}
+            style={{
+              marginLeft: 8, padding: '2px 8px', cursor: 'pointer',
+              background: 'transparent', color: '#854d0e', border: '1px solid #854d0e', borderRadius: 4,
+            }}>
+            Dismiss
+          </button>
+        </div>
+      )}
+
       {/* ── API Modal */}
       {showApiModal && (
         <div className="modal-overlay">
@@ -549,9 +726,15 @@ export default function App() {
               <label className="field-label" style={{ textAlign: "left", display: "block", marginBottom: 4, marginTop: 12 }}>Expiry Date (YYYY-MM-DD)</label>
               <input
                 className="modal-input" type="text"
-                value={expiryDraft} onChange={e => setExpiryDraft(e.target.value)}
+                value={expiryDraft} onChange={e => { setExpiryDraft(e.target.value); setExpiryDraftError(''); }}
                 placeholder="2024-03-28" required
               />
+              {/* FIX: show inline error if date format is wrong */}
+              {expiryDraftError && (
+                <p style={{ color: '#dc2626', fontSize: 12, margin: '4px 0 0', textAlign: 'left' }}>
+                  {expiryDraftError}
+                </p>
+              )}
               <div className="modal-actions" style={{ marginTop: 20 }}>
                 {expiryDate && <button type="button" className="btn btn-ghost" onClick={() => setShowApiModal(false)}>Cancel</button>}
                 <button type="submit" className="btn btn-primary">Connect</button>
@@ -651,14 +834,37 @@ export default function App() {
       </header>
 
       {/* ── Chart Area — single container, native panes inside */}
-      <div className="chart-area">
-        {/* Floating pane labels */}
-        <div className="pane-label pane-label-1" style={{ color: ind1Meta?.color || '#2196f3' }}>
-          {ind1Meta?.label || ind1}
+      <div className="chart-area" style={{ position: 'relative' }}>
+        {/* FIX: TradingView-style — pane 1 label + live crosshair value at top-left */}
+        <div style={{
+          position: 'absolute', top: 8, left: 8, zIndex: 10,
+          display: 'flex', alignItems: 'center', gap: 6,
+          pointerEvents: 'none', userSelect: 'none',
+        }}>
+          <span style={{ color: ind1Meta?.color || '#2196f3', fontSize: 11, fontWeight: 700 }}>
+            {ind1Meta?.label || ind1}
+          </span>
+          {crosshairVals.v1 !== null && (
+            <span style={{ color: ind1Meta?.color || '#2196f3', fontSize: 11, fontWeight: 400, opacity: 0.9 }}>
+              {formatPriceScale(crosshairVals.v1)}
+            </span>
+          )}
         </div>
-        {hasPane2 && (
-          <div className="pane-label pane-label-2" style={{ color: ind2Meta?.color || '#9c27b0' }}>
-            {ind2Meta?.label || ind2}
+        {/* FIX: pane 2 label + live crosshair value, positioned below separator */}
+        {hasPane2 && pane1Height > 0 && (
+          <div style={{
+            position: 'absolute', top: pane1Height + 8, left: 8, zIndex: 10,
+            display: 'flex', alignItems: 'center', gap: 6,
+            pointerEvents: 'none', userSelect: 'none',
+          }}>
+            <span style={{ color: ind2Meta?.color || '#9c27b0', fontSize: 11, fontWeight: 700 }}>
+              {ind2Meta?.label || ind2}
+            </span>
+            {crosshairVals.v2 !== null && (
+              <span style={{ color: ind2Meta?.color || '#9c27b0', fontSize: 11, fontWeight: 400, opacity: 0.9 }}>
+                {formatPriceScale(crosshairVals.v2)}
+              </span>
+            )}
           </div>
         )}
         <div ref={containerRef} className="chart-canvas" />

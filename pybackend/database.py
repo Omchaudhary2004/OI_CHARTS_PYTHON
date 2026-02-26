@@ -111,13 +111,18 @@ def init_db():
 
 # ── Date & URL helpers ────────────────────────────────────────────────────────
 
-def _today_utc() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%d")
+# FIX: use IST date (UTC+5:30) instead of UTC — prevents DB clearing mid-session at 5:30 AM IST
+from datetime import timedelta
+_IST = timedelta(hours=5, minutes=30)
+
+
+def _today_ist() -> str:
+    return (datetime.now(timezone.utc) + _IST).strftime("%Y-%m-%d")
 
 
 def check_and_clear_old_data() -> bool:
-    """If the most-recent snapshot date ≠ today, delete all snapshots. Returns True if cleared."""
-    today = _today_utc()
+    """If the most-recent snapshot date ≠ today IST, delete all snapshots. Returns True if cleared."""
+    today = _today_ist()  # FIX: IST date, not UTC
     with db_cursor() as cur:
         cur.execute("SELECT DISTINCT date FROM snapshots ORDER BY date DESC LIMIT 1")
         row = cur.fetchone()
@@ -148,14 +153,26 @@ def check_and_clear_for_url_change(new_url: str) -> bool:
 # ── Snapshot CRUD ─────────────────────────────────────────────────────────────
 
 def save_snapshot(ind: dict, raw: dict) -> dict:
-    """Insert a new snapshot row and return {id, timestamp, date}."""
+    """Insert a new snapshot row and return {id, timestamp, date}.
+    FIX: Deduplication — if a row for this exact minute already exists
+    (e.g. saved by the scheduler before the frontend poll arrived),
+    return the existing row without inserting a duplicate.
+    """
     check_and_clear_old_data()
 
-    now     = datetime.now(timezone.utc)
-    ts_str  = now.isoformat()
+    now      = datetime.now(timezone.utc)
+    ts_str   = now.strftime("%Y-%m-%dT%H:%M:%SZ")  # no microseconds
     date_str = now.strftime("%Y-%m-%d")
 
     with db_cursor() as cur:
+        # FIX: check for duplicate before inserting
+        cur.execute("SELECT id, timestamp, date FROM snapshots WHERE timestamp = ?", (ts_str,))
+        existing = cur.fetchone()
+        if existing:
+            log_to_file(f"[DEDUP] Snapshot already exists for {ts_str} — skipping insert")
+            return {"id": existing["id"], "timestamp": existing["timestamp"],
+                    "date": existing["date"], "already_existed": True}
+
         cur.execute("""
             INSERT INTO snapshots (
                 timestamp, date, underlying,
@@ -192,7 +209,20 @@ def save_snapshot(ind: dict, raw: dict) -> dict:
         "total_pe_oi_value": ind["total_pe_oi_value"],
     })
 
-    return {"id": row_id, "timestamp": ts_str, "date": date_str}
+    return {"id": row_id, "timestamp": ts_str, "date": date_str, "already_existed": False}
+
+
+def get_latest_snapshot() -> dict | None:
+    """FIX: Return the most recent snapshot row as a dict, or None if empty.
+    Used by POST /api/process to return cached data without re-fetching Upstox
+    when the scheduler already saved the current minute's data.
+    """
+    with db_cursor() as cur:
+        cur.execute(
+            f"SELECT {_INDICATOR_COLS} FROM snapshots ORDER BY timestamp DESC LIMIT 1"
+        )
+        row = cur.fetchone()
+        return dict(row) if row else None
 
 
 # ── Queries ───────────────────────────────────────────────────────────────────
@@ -212,7 +242,7 @@ _INDICATOR_COLS = """
 
 def get_indicators_for_date(date_str: str = None) -> list[dict]:
     if not date_str:
-        date_str = _today_utc()
+        date_str = _today_ist()  # FIX: IST date
     with db_cursor() as cur:
         cur.execute(
             f"SELECT {_INDICATOR_COLS} FROM snapshots WHERE date = ? ORDER BY timestamp ASC",
@@ -239,7 +269,7 @@ def get_all_history() -> list[dict]:
 
 def get_snapshots_for_export(date_str: str = None) -> list[dict]:
     if not date_str:
-        date_str = _today_utc()
+        date_str = _today_ist()  # FIX: IST date
     with db_cursor() as cur:
         cur.execute("""
             SELECT timestamp, underlying, nifty_price,

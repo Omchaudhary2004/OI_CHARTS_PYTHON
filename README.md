@@ -1,370 +1,199 @@
-# Nifty Option Chain Analyzer
+# OI Charts — Project README
 
-A real-time visualization tool for analyzing NIFTY option chain data with 12 advanced technical indicators. Monitor call-put dynamics, volume flows, and market sentiment through interactive charts.
+## What This App Does
 
-## 🎯 Features
-
-- **Real-time Data**: Auto-updates every 60 seconds from NSE API
-- **12 Built-in Indicators**: Pre-calculated formulas for quick analysis
-- **Custom Indicators**: Create your own formulas using base variables
-- **Dual Chart View**: Compare two indicators side-by-side with synchronized zoom
-- **CSV Export**: Download all data for Excel analysis
-- **Database Storage**: Persistent data with automatic cleanup for new trading days
+Fetches live NSE Nifty 50 option chain data from Upstox every minute, calculates open-interest indicators, stores them in SQLite, and plots them as real-time charts in the browser.
 
 ---
 
-## 📊 Indicators
-
-All indicators are calculated with **Lot Size = 65** (Standard for NIFTY options).
-
-### Core Indicators
-
-| # | Name | Formula | Interpretation |
-|---|------|---------|---|
-| 0 | **Underlying** | Direct NIFTY spot price | Current market level |
-| 1 | **Total CE OI Value** | Σ(CE OI × 65 × LastPrice) | Call option value at all strikes |
-| 2 | **Total PE OI Value** | Σ(PE OI × 65 × LastPrice) | Put option value at all strikes |
-| 3 | **Total CE OI Change** | Σ(CE ΔOI × 65 × LastPrice) | Fresh call OI buildup/unwinding |
-| 4 | **Total PE OI Change** | Σ(PE ΔOI × 65 × LastPrice) | Fresh put OI buildup/unwinding |
-| 5 | **Total CE Trade Value** | Σ(CE Volume × 65 × LastPrice) | Call side trading activity |
-| 6 | **Total PE Trade Value** | Σ(PE Volume × 65 × LastPrice) | Put side trading activity |
-| 9 | **Diff OI Value** | CE OI Value - PE OI Value | **> 0: Bullish, < 0: Bearish** |
-| 10 | **Ratio OI Value** | CE OI Value ÷ PE OI Value | **> 1.0: Bullish, < 1.0: Bearish** |
-| 11 | **Diff Trade Value** | CE Trade Value - PE Trade Value | Volume-weighted market bias |
-| 12 | **Test** | User-defined formula | Custom combinations of above |
-
-### Formula Details
-
-Each indicator aggregates data **across all strike prices** for the current expiry:
+## Project Structure
 
 ```
-Total CE OI Value = Σ for each strike: (openInterest × 65) × lastPrice
-Total PE OI Value = Σ for each strike: (openInterest × 65) × lastPrice
-
-Total CE OI Change = Σ for each strike: (changeinOpenInterest × 65) × lastPrice
-Total PE OI Change = Σ for each strike: (changeinOpenInterest × 65) × lastPrice
-
-Total CE Trade Value = Σ for each strike: (totalTradedVolume × 65) × lastPrice
-Total PE Trade Value = Σ for each strike: (totalTradedVolume × 65) × lastPrice
-
-Diff OI Value = Total CE OI Value - Total PE OI Value
-Ratio OI Value = Total CE OI Value / Total PE OI Value (handle division by zero)
-Diff Trade Value = Total CE Trade Value - Total PE Trade Value
+AI/
+├── start.bat                  ← One-click launcher (Start / Stop)
+├── frontent/                  ← React frontend (Vite, port 5173)
+│   └── src/
+│       └── App.jsx            ← All frontend logic: polling, charts, UI
+└── pybackend/                 ← Python backend (Flask, port 4000)
+    ├── main.py                ← App entry point + APScheduler
+    ├── session.py             ← Global token/expiry state (shared with scheduler)
+    ├── config.py              ← Env vars (PORT, DB_PATH, UPSTOX_TOKEN)
+    ├── database.py            ← SQLite helpers (init, save, query, dedup)
+    ├── calculator.py          ← Indicator formulas (CE OI, PE OI, Diff, Ratio…)
+    ├── upstox_client.py       ← Upstox API HTTP calls
+    ├── logger.py              ← File + console logging
+    ├── requirements.txt       ← Python dependencies
+    └── routes/
+        ├── __init__.py        ← Registers all blueprints
+        ├── connect.py         ← POST /api/connect
+        ├── process.py         ← POST /api/process
+        ├── history.py         ← GET  /api/history
+        ├── export.py          ← GET  /api/export
+        └── custom_indicators.py ← CRUD /api/custom-indicators
 ```
 
 ---
 
-## 🚀 Quick Start
+## How to Start
 
-### Requirements
-- Node.js 18+ and npm
-- SQLite3 (included with most systems)
-- NSE Option Chain API URL
-
-### Installation
-
-```bash
-# Clone repository
-git clone <repo-url>
-cd nifty-option-chain
-
-# Install dependencies
-cd backend && npm install
-cd ../frontent && npm install
+```
+Double-click start.bat → press 1
 ```
 
-### Running
-
-**Terminal 1 - Backend (Port 4000)**
-```bash
-cd backend
-node index.js
-# Output: ✓ Snapshots table ready
-#         ✓ Custom indicators table ready
-#         Server running on port 4000
-```
-
-**Terminal 2 - Frontend (Port 5173)**
-```bash
-cd frontent
-npm run dev
-# Opens http://localhost:5173
-```
-
-### First Use
-
-1. Open browser to `http://localhost:5173`
-2. Paste NSE option chain API URL (looks like: `https://www.nseindia.com/api/option-chain-v3?...`)
-3. Click **Connect** → Auto-polls every 60 seconds
-4. Select indicators in **Pane 1** and **Pane 2** dropdowns
-5. Use 🔍+/− to zoom, **Reset** to fit data
+This will:
+1. Check `.venv` exists (shows setup instructions if not)
+2. Kill any orphaned python/node on ports 4000/5173
+3. Open `BACKEND` terminal → auto-restarts Python on crash
+4. Open `FRONTEND` terminal → `npm install && npm run dev`
+5. Open browser at `http://localhost:5173`
 
 ---
 
-## 📈 How to Use
-
-### View Indicators
-
-1. **Pane 1**: Select primary indicator (bottom chart)
-2. **Pane 2**: Select secondary indicator (top chart, optional)
-3. Both charts stay **synchronized** when zooming/panning
-
-### Create Custom Indicator
-
-1. Click **+ Add** button
-2. Enter **name** (e.g., "CE-PE Momentum")
-3. Enter **formula** using available variables:
-   - `nifty_price`, `total_ce_oi_value`, `total_pe_oi_value`
-   - `total_ce_oi_change_value`, `total_pe_oi_change_value`
-   - `total_ce_trade_value`, `total_pe_trade_value`
-   - `diff_oi_value`, `ratio_oi_value`, `diff_trade_value`
-4. Click **Save**
-
-### Example Formulas
-
-```javascript
-// Convert Diff to millions (easier to read)
-diff_oi_value / 1000000
-
-// Pe Bias (what % of total OI is in PE)
-total_pe_oi_value / (total_ce_oi_value + total_pe_oi_value)
-
-// OI Momentum (change relative to current OI)
-(total_ce_oi_change_value + total_pe_oi_change_value) / (total_ce_oi_value + total_pe_oi_value)
-
-// CE Dominance Score
-(total_ce_oi_value - total_pe_oi_value) / (total_ce_oi_value + total_pe_oi_value)
-```
-
-### Export Data
-
-1. Click **Export CSV** (when data is available)
-2. File downloads as `indicators-YYYY-MM-DD.csv`
-3. Open in Excel/Sheets for further analysis
-
----
-
-## 🏗️ Architecture
-
-### Backend Stack
-- **Express.js** - REST API server
-- **SQLite3** - Persistent data storage
-- **Node.js** - Runtime
-
-### Frontend Stack
-- **React** - UI framework
-- **lightweight-charts** - Professional charting
-- **Vite** - Build tool
-
-### Data Flow
+## Complete Data Flow
 
 ```
-NSE API
-   ↓
-/api/process (fetch & calculate)
-   ↓
-calculateIndicators() (sum across all strikes)
-   ↓
-SQLite Database (snapshots table)
-   ↓
-/api/history (retrieve for charts)
-   ↓
-React Frontend (visualization)
+┌─────────────────────────────────────────────────┐
+│                 UPSTOX  API                     │
+│  GET /option-chain?instrument=NSE_INDEX|Nifty50 │
+└───────────────────┬─────────────────────────────┘
+                    │ Bearer token (from user)
+                    ▼
+┌─────────────────────────────────────────────────┐
+│           PYTHON BACKEND  (port 4000)           │
+│                                                 │
+│  ┌─────────────────────────────────────────┐   │
+│  │   APScheduler (BackgroundScheduler)     │   │
+│  │   CronTrigger(second=0)                 │   │
+│  │   → fires at 9:15:00, 9:16:00, …       │   │
+│  │   → reads token from session.py        │   │
+│  │   → calls upstox_client.py             │   │
+│  │   → calls calculator.py               │   │
+│  │   → calls database.save_snapshot()    │   │
+│  └────────────────────┬────────────────────┘   │
+│                       │                         │
+│  ┌────────────────────▼────────────────────┐   │
+│  │   SQLite DB  (data.db)                  │   │
+│  │   Table: snapshots                      │   │
+│  │   1 row per minute, timestamp=YYYY-…Z   │   │
+│  │   Columns: timestamp, nifty_price,      │   │
+│  │   total_ce_oi_value, total_pe_oi_value, │   │
+│  │   diff_oi_value, ratio_oi_value, …      │   │
+│  └────────────────────┬────────────────────┘   │
+│                       │                         │
+│  POST /api/process    │  GET /api/history        │
+│  (frontend poll)      │  (on connect/reconnect) │
+└───────────────────────┼─────────────────────────┘
+                        │
+                        ▼
+┌─────────────────────────────────────────────────┐
+│           REACT FRONTEND  (port 5173)           │
+│                                                 │
+│  schedulePoll()  ──→  fires at next :00 second  │
+│  │                                              │
+│  └─→ POST /api/process                          │
+│       ├─ backend checks: scheduler saved yet?   │
+│       │   YES → return cached DB row (no Upstox)│
+│       │   NO  → fetch Upstox → save → return    │
+│       └─→ setPoints([...prev, newPoint])        │
+│            → dedup: skip if timestamp matches   │
+│                                                 │
+│  buildSeriesData(points)                        │
+│  → converts flat points[] to lightweight-charts │
+│     time/value pairs, splitting on >2min gaps   │
+│                                                 │
+│  useDualPaneChart()                             │
+│  → renders Pane 1 (indicator 1)                 │
+│  → renders Pane 2 (indicator 2, optional)       │
+│  → crosshair shows live value at cursor         │
+└─────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 📋 API Endpoints
+## Minute Polling — How It's Aligned
 
-### GET `/ping`
-Health check
-```json
-{ "ok": true, "time": "2026-02-24T10:30:00.000Z" }
+```
+Clock: 09:15:58   User clicks Connect
+         ↓
+  fetchHistory()  → loads all today's DB rows into chart immediately
+         ↓
+  schedulePoll()  → calculates ms to next :00
+                    = 60,000 - (Date.now() % 60,000)
+                    = 60,000 - 58,000 = 2,000ms
+
+Clock: 09:16:00   → poll fires (exactly at :00)
+Clock: 09:17:00   → poll fires
+Clock: 09:18:00   → poll fires  ...and so on
 ```
 
-### POST `/api/process`
-Fetch and calculate indicators
-```bash
-curl -X POST http://localhost:4000/api/process \
-  -H "Content-Type: application/json" \
-  -d '{"url":"https://www.nseindia.com/api/..."}'
-```
+If a poll **fails** (Upstox error):
+- Retries once after 10 seconds within same minute window
+- Backend itself retries 3× with exponential backoff (1s → 2s → 4s)
+- If backend was offline, `GET /api/history` reloads all missed minutes on recovery
 
-### GET `/api/history`
-Retrieve all stored indicators
-```json
-[
-  {
-    "timestamp": "2026-02-24T05:00:00.000Z",
-    "nifty_price": 25424.65,
-    "total_ce_oi_value": 512345678,
-    "total_pe_oi_value": 487654321,
-    ...
-  }
-]
-```
-
-### GET `/api/export?date=2026-02-24`
-Download CSV export
-
-### Custom Indicators CRUD
-- `GET /api/custom-indicators` - List all
-- `POST /api/custom-indicators` - Create
-- `DELETE /api/custom-indicators/:id` - Delete
+If **browser tab is closed**:
+- APScheduler in Python **keeps running** — data saved to DB every minute
+- When user reopens tab and clicks Connect, `fetchHistory()` fills all missed bars from DB
 
 ---
 
-## 💾 Database Schema
+## Indicator Formulas
 
-### `snapshots` Table
+| Indicator | Formula |
+|---|---|
+| Nifty Price | Underlying value from Upstox |
+| Total CE OI Value | Σ (CE Open Interest × Strike Price) |
+| Total PE OI Value | Σ (PE Open Interest × Strike Price) |
+| Total CE OI Value 2 | Σ (CE Open Interest × Last Price) |
+| Total PE OI Value 2 | Σ (PE Open Interest × Last Price) |
+| CE OI Change Value | Σ (CE Change in OI × Strike Price) |
+| PE OI Change Value | Σ (PE Change in OI × Strike Price) |
+| CE Trade Value | Σ (CE Volume × Last Price) |
+| PE Trade Value | Σ (PE Volume × Last Price) |
+| Diff OI Value | Total CE OI Value − Total PE OI Value |
+| Ratio OI Value | Total CE OI Value ÷ Total PE OI Value |
+| Diff OI Value 2 | Total CE OI Value 2 − Total PE OI Value 2 |
+| Ratio OI Value 2 | Total CE OI Value 2 ÷ Total PE OI Value 2 |
+| Diff Trade Value | CE Trade Value − PE Trade Value |
 
-| Column | Type | Purpose |
-|--------|------|---------|
-| timestamp | TEXT | UTC time of snapshot |
-| underlying | REAL | NIFTY spot price |
-| total_ce_oi_value | REAL | Call OI value |
-| total_pe_oi_value | REAL | Put OI value |
-| total_ce_oi_change_value | REAL | Call OI change |
-| total_pe_oi_change_value | REAL | Put OI change |
-| total_ce_trade_value | REAL | Call trade value |
-| total_pe_trade_value | REAL | Put trade value |
-| diff_oi_value | REAL | CE - PE difference |
-| ratio_oi_value | REAL | CE / PE ratio |
-| diff_trade_value | REAL | CE trade - PE trade |
-| test_value | REAL | User custom field |
-| raw_json | TEXT | Complete API response |
-
-### `custom_indicators` Table
-
-| Column | Type |
-|--------|------|
-| name | TEXT (unique) |
-| formula | TEXT |
-| created_at | TIMESTAMP |
+Custom indicators: user-defined formula using any column name above (e.g. `total_ce_oi_value / total_pe_oi_value * 100`).
 
 ---
 
-## 🔄 Data Updates
+## API Endpoints
 
-- **Poll Interval**: 60 seconds (configurable in code)
-- **Data Retention**: Automatic cleanup when date changes
-- **Time Zone**: UTC stored, IST (UTC+5:30) displayed
-- **CSV Export**: Timestamps converted to IST
-
----
-
-## 📊 Trading Signals
-
-### Bullish Setup
-- ✅ Diff OI Value **rising** (> 0)
-- ✅ Ratio OI Value **> 1.0** and increasing
-- ✅ CE OI Change **positive** (fresh longs)
-- ✅ CE Trade Value **> PE Trade Value**
-
-### Bearish Setup
-- ✅ Diff OI Value **falling** (< 0)
-- ✅ Ratio OI Value **< 1.0** and decreasing
-- ✅ PE OI Change **positive** (fresh shorts)
-- ✅ PE Trade Value **> CE Trade Value**
-
-### Consolidation
-- 🔹 Diff OI Value near **zero** for extended period
-- 🔹 Ratio OI Value near **1.0**
-- 🔹 Both CE & PE building **equally**
+| Method | Endpoint | What it does |
+|---|---|---|
+| GET | `/health` | Returns `{status: "ok"}` — used by frontend health check |
+| POST | `/api/connect` | Updates session (token + expiry), clears DB if source changed |
+| POST | `/api/process` | Returns this minute's data (from DB cache or fresh Upstox fetch) |
+| GET | `/api/history` | Returns all today's snapshots as JSON array |
+| GET | `/api/export` | Returns today's data as CSV download |
+| GET + POST + DELETE | `/api/custom-indicators` | CRUD for user-defined indicator formulas |
 
 ---
 
-## 🛠️ Configuration
+## Error Handling & Resilience
 
-### Backend (`backend/index.js`)
-```javascript
-const PORT = process.env.PORT || 4000;
-const POLL_INTERVAL_MS = 60_000; // Change to poll more/less frequently
-const TIME_GAP_THRESHOLD = 120; // Break charts on gaps > 2 minutes
-const LOT_SIZE = 65; // NIFTY standard lot size
-```
-
-### Frontend (`frontent/src/App.jsx`)
-```javascript
-const BACKEND_BASE = 'http://localhost:4000';
-const LS_API_URL_KEY = 'oc_api_url'; // LocalStorage key for URL
-```
-
----
-
-## 🐛 Troubleshooting
-
-| Issue | Solution |
-|-------|----------|
-| "Cannot connect to API" | Ensure NSE URL is correct, check CORS headers |
-| "Database locked" | Close other instances, restart backend |
-| "Charts not updating" | Check browser console for errors, verify API data |
-| "Export CSV empty" | Data exists only after API polls successfully |
-| "Custom formula error" | Verify variable names match available list |
+| Problem | How it's handled |
+|---|---|
+| Backend crash | `start.bat :pyloop` — auto-restarts in 3 seconds |
+| Port 4000 occupied | `start.bat` kills PID on port 4000 before starting |
+| Upstox API error | `fetch_with_retry()` — 3 retries with 1s/2s/4s backoff |
+| Frontend poll fails | `schedulePoll()` retries once after 10s in same minute |
+| Browser tab closed | APScheduler saves independently — history loads on return |
+| Browser tab throttled | `visibilitychange` listener — immediate catch-up poll on tab focus |
+| Backend offline >60s | Health check every 30s — shows banner, reloads history on recovery |
+| Token expired | Yellow warning banner next morning comparing localStorage date |
+| Wrong date format | Inline validation error in connect modal (rejects non-YYYY-MM-DD) |
+| Duplicate data | DB dedup in `save_snapshot()` + frontend timestamp comparison |
+| DB wipes at wrong time | IST date used for daily-clear check (not UTC) |
 
 ---
 
-## 📈 Example Use Cases
+## Important Notes
 
-### 1. Real-time Sentiment Analysis
-Display `Diff OI Value` to see Call vs Put strength throughout the day.
-
-### 2. Volume Confirmation
-Compare `Diff OI Value` with `Diff Trade Value` to confirm moves with volume.
-
-### 3. Momentum Trades
-Use `Total CE OI Change Value` and `Total PE OI Change Value` for momentum setup confirmation.
-
-### 4. Risk Management
-Monitor `Ratio OI Value` for overbought (> 1.5) or oversold (< 0.67) extremes.
-
-### 5. Intraday Scalping
-Track `Diff Trade Value` changes for quick whipsaw trades.
-
----
-
-## 📚 Resources
-
-- **NSE Option Chain API**: https://www.nseindia.com/api/option-chain-v3
-- **NIFTY Futures/Options Guide**: https://www.nseindia.com/products/content/derivatives/equities/options.htm
-
----
-
-## 📝 Notes
-
-- All monetary values are in **Rupees**
-- Lot size is **65 shares** per contract for NIFTY
-- Data is cleaned automatically at end of trading day
-- Custom indicators use JavaScript expression syntax
-- Time gaps > 2 minutes break chart lines (visual clarity)
-
----
-
-## 🤝 Contributing
-
-Feel free to extend with:
-- Additional indicator types (Greeks, IV, etc.)
-- Multi-leg strategy builders
-- Alert notifications
-- WebSocket for real-time updates without polling
-
----
-
-## 📄 License
-
-MIT License - Build and trade freely!
-
----
-
-## 💬 Support
-
-For issues or feature requests, please document:
-- Steps to reproduce
-- Expected vs actual behavior
-- Browser/OS/Node.js version
-- Screenshot of indicators
-
----
-
-**Made with ❤️ for options traders** 📊
-
+- **Keep the BACKEND terminal open** — APScheduler lives in the Python process. Closing the terminal kills the scheduler.
+- **Upstox token expires daily** — get a new token every morning from Upstox developer console.
+- **Market hours only** — data is only meaningful during NSE trading hours (9:15 AM – 3:30 PM IST).
+- **DB auto-clears daily** — SQLite data is wiped automatically when the IST date changes (after 12:00 AM IST).
