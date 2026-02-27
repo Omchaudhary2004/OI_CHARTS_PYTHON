@@ -122,6 +122,7 @@ function useDualPaneChart(containerRef, { data1, color1, id1, data2, color2, id2
   const series2Ref = useRef([]);
   const prevId1 = useRef(id1);
   const prevId2 = useRef(id2);
+  const prevHasPane2 = useRef(hasPane2); // track transition true→false for one-shot resize
   // FIX: crosshair value display — track hovered values for both panes
   const [crosshairVals, setCrosshairVals] = useState({ v1: null, v2: null });
 
@@ -212,44 +213,45 @@ function useDualPaneChart(containerRef, { data1, color1, id1, data2, color2, id2
     const indicatorChanged = prevId1.current !== id1;
     prevId1.current = id1;
 
-    // If indicator changed, remove all old series to completely reset scale
-    if (indicatorChanged) {
-      series1Ref.current.forEach(s => { try { chart.removeSeries(s); } catch { } });
-      series1Ref.current = [];
-    }
-
     const segments = splitDataByGaps(data1);
-    const isInitial = series1Ref.current.length === 0;
 
+    // CRITICAL: Never remove ALL series from pane 0 at once.
+    // In LW Charts v5, emptying a pane causes it to collapse and the remaining
+    // panes get renumbered — pane 1 becomes pane 0, so new series added to "index 0"
+    // land in the wrong pane and the chart glitches.
+    //
+    // Strategy: update existing series in-place (color + data), add new ones at
+    // the end if segments grew, remove extras from the END only (series[0] always stays).
     segments.forEach((seg, i) => {
       const isLast = i === segments.length - 1;
       if (series1Ref.current[i]) {
-        series1Ref.current[i].applyOptions({
-          color: color1,
-          // FIX: only the last segment shows the latest-price highlight
-          lastValueVisible: isLast,
-        });
+        // In-place update handles both regular refresh and indicator change
+        series1Ref.current[i].applyOptions({ color: color1, lastValueVisible: isLast });
         series1Ref.current[i].setData(seg);
       } else {
         const s = chart.addSeries(LineSeries, {
           color: color1,
           lineWidth: 2,
           priceLineVisible: false,
-          // FIX: latest price highlight on last segment only (no clutter on gap charts)
           lastValueVisible: isLast,
-        }); // default pane index 0
+        }, 0); // explicit pane 0
         s.setData(seg);
         series1Ref.current.push(s);
       }
     });
 
+    // Remove excess series from the END only — pane 0 always keeps series[0] alive
     while (series1Ref.current.length > segments.length) {
       const s = series1Ref.current.pop();
       try { chart.removeSeries(s); } catch { }
     }
 
-    if (isInitial && data1.length > 0) {
+    // Fit on indicator change or initial load
+    if (indicatorChanged && data1.length > 0) {
       chart.timeScale().fitContent();
+    } else if (series1Ref.current.length > 0 && series1Ref.current.length === segments.length && segments.length === 1) {
+      // First data point ever — fit once
+      if (segments[0].length === 1) chart.timeScale().fitContent();
     }
   }, [data1, color1, id1]);
 
@@ -262,9 +264,28 @@ function useDualPaneChart(containerRef, { data1, color1, id1, data2, color2, id2
       series2Ref.current.forEach(s => { try { chart.removeSeries(s); } catch { } });
       series2Ref.current = [];
       prevId2.current = id2;
+
+      // Only fire the forced resize ONCE — on the exact moment hasPane2 goes
+      // from true → false. Re-firing it on every render would reset the chart
+      // height and wipe out the user's custom pane-separator position (lines disappear).
+      if (prevHasPane2.current) {
+        prevHasPane2.current = false;
+        const el = containerRef.current;
+        if (el) {
+          requestAnimationFrame(() => {
+            if (chartRef.current && el) {
+              chartRef.current.applyOptions({
+                width: el.clientWidth,
+                height: el.clientHeight,
+              });
+            }
+          });
+        }
+      }
       return;
     }
 
+    prevHasPane2.current = true;
     const indicatorChanged = prevId2.current !== id2;
     prevId2.current = id2;
 

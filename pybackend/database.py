@@ -19,10 +19,18 @@ from logger import log_error, log_data_point, log_to_file
 # ── Connection factory ────────────────────────────────────────────────────────
 
 def get_connection() -> sqlite3.Connection:
-    """Open a DB connection with row_factory so rows behave like dicts."""
+    """Open a DB connection with row_factory so rows behave like dicts.
+
+    WAL mode:     allows concurrent reads + one writer without SQLITE_BUSY.
+    busy_timeout: up to 5 s of spin-wait before raising OperationalError,
+                  so scheduler + HTTP threads never silently drop a write.
+    """
     conn = sqlite3.connect(str(DB_PATH), check_same_thread=False)
     conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA journal_mode=WAL")    # Write-Ahead Logging — no reader/writer conflicts
+    conn.execute("PRAGMA busy_timeout=5000")   # 5 000 ms spin before SQLITE_BUSY
     conn.execute("PRAGMA foreign_keys = ON")
+    conn.execute("PRAGMA synchronous=NORMAL")  # safe with WAL, faster than FULL
     return conn
 
 
@@ -55,6 +63,9 @@ def init_db():
         """)
         cur.execute("INSERT OR IGNORE INTO metadata (key, value) VALUES ('current_url',  '')")
         cur.execute("INSERT OR IGNORE INTO metadata (key, value) VALUES ('current_date', '')")
+        # Persist session so credentials survive a backend restart during market hours
+        cur.execute("INSERT OR IGNORE INTO metadata (key, value) VALUES ('session_token',       '')")
+        cur.execute("INSERT OR IGNORE INTO metadata (key, value) VALUES ('session_expiry_date', '')")
 
         # Snapshots table – all indicator columns
         cur.execute("""
@@ -133,6 +144,38 @@ def check_and_clear_old_data() -> bool:
     return False
 
 
+# ── Session persistence helpers ───────────────────────────────────────────────
+
+def persist_session(token: str | None, expiry_date: str | None) -> None:
+    """
+    Write token + expiry_date into the metadata table so they survive a backend
+    restart during market hours.  Called by session.set_session() automatically.
+    Token is stored as-is (plaintext); the DB file should be kept private.
+    """
+    with db_cursor() as cur:
+        cur.execute("UPDATE metadata SET value = ? WHERE key = 'session_token'",
+                    (token or "",))
+        cur.execute("UPDATE metadata SET value = ? WHERE key = 'session_expiry_date'",
+                    (expiry_date or "",))
+
+
+def load_persisted_session() -> dict:
+    """
+    Read token + expiry_date from the metadata table.
+    Returns {"token": ..., "expiry_date": ...} with None values if not set.
+    Called once at startup by main.py so the scheduler can resume immediately.
+    """
+    with db_cursor() as cur:
+        cur.execute("SELECT key, value FROM metadata WHERE key IN ('session_token', 'session_expiry_date')")
+        rows = {r["key"]: r["value"] for r in cur.fetchall()}
+    return {
+        "token":       rows.get("session_token")       or None,
+        "expiry_date": rows.get("session_expiry_date") or None,
+    }
+
+
+
+
 def check_and_clear_for_url_change(new_url: str) -> bool:
     """If stored URL ≠ new_url, delete all snapshots and update URL. Returns True if cleared."""
     with db_cursor() as cur:
@@ -154,24 +197,44 @@ def check_and_clear_for_url_change(new_url: str) -> bool:
 
 def save_snapshot(ind: dict, raw: dict) -> dict:
     """Insert a new snapshot row and return {id, timestamp, date}.
-    FIX: Deduplication — if a row for this exact minute already exists
-    (e.g. saved by the scheduler before the frontend poll arrived),
-    return the existing row without inserting a duplicate.
+
+    Deduplication uses a MINUTE-BUCKET key (YYYY-MM-DDTHH:MM) rather than
+    the exact UTC second.  This means:
+
+    - If the scheduler fires at :01 instead of :00, it still de-dupes against
+      a :00 row saved by the frontend for the same minute → no duplicate.
+    - If the frontend polls at :30 and the scheduler fires at :00 of the same
+      minute, only one row is kept → no gap, no duplicate.
+
+    The stored `timestamp` still records the actual HH:MM:SS for the chart
+    time axis — only the dedup *check* uses the minute prefix.
     """
     check_and_clear_old_data()
 
-    now      = datetime.now(timezone.utc)
-    ts_str   = now.strftime("%Y-%m-%dT%H:%M:%SZ")  # no microseconds
-    date_str = now.strftime("%Y-%m-%d")
+    now           = datetime.now(timezone.utc)
+    ts_str        = now.strftime("%Y-%m-%dT%H:%M:%SZ")   # full precision stored
+    minute_bucket = now.strftime("%Y-%m-%dT%H:%M")        # prefix used for dedup
+    date_str      = now.strftime("%Y-%m-%d")
 
     with db_cursor() as cur:
-        # FIX: check for duplicate before inserting
-        cur.execute("SELECT id, timestamp, date FROM snapshots WHERE timestamp = ?", (ts_str,))
+        # De-duplicate on the minute bucket — covers jobs that fire a few seconds
+        # late or frontend polls that arrive before/after the scheduler tick.
+        cur.execute(
+            "SELECT id, timestamp, date FROM snapshots WHERE timestamp LIKE ?",
+            (minute_bucket + "%",)
+        )
         existing = cur.fetchone()
         if existing:
-            log_to_file(f"[DEDUP] Snapshot already exists for {ts_str} — skipping insert")
-            return {"id": existing["id"], "timestamp": existing["timestamp"],
-                    "date": existing["date"], "already_existed": True}
+            log_to_file(
+                f"[DEDUP] Snapshot for minute {minute_bucket} already exists "
+                f"(stored ts={existing['timestamp']}) — skipping insert"
+            )
+            return {
+                "id": existing["id"],
+                "timestamp": existing["timestamp"],
+                "date": existing["date"],
+                "already_existed": True,
+            }
 
         cur.execute("""
             INSERT INTO snapshots (

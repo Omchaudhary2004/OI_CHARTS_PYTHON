@@ -73,12 +73,14 @@ def process():
         # Clear snapshots if data source changed (e.g. new expiry date)
         check_and_clear_for_url_change(source_identifier)
 
-        # FIX: check if scheduler already saved data for this minute
-        # If so, return the cached row — no Upstox API call needed
-        current_ts = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        # Check if scheduler already saved data for this minute using
+        # minute-bucket comparison (first 16 chars: "YYYY-MM-DDTHH:MM").
+        # Exact-second comparison never matched because the frontend arrives
+        # a few seconds after the scheduler's :00 tick.
+        current_minute = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M")
         latest = get_latest_snapshot()
-        if latest and latest.get("timestamp") == current_ts:
-            log_to_file(f"[CACHE HIT] Returning scheduler-saved data for {current_ts}")
+        if latest and latest.get("timestamp", "")[:16] == current_minute:
+            log_to_file(f"[CACHE HIT] Returning scheduler-saved data for minute {current_minute}")
             return jsonify(_snapshot_to_response(latest))
 
         # FIX: scheduler hasn't saved yet (or we're ahead of it) — fetch directly
