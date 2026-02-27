@@ -112,3 +112,286 @@
 [2026-02-27T03:20:00.692506+00:00] [UPSTOX FETCH] status=success rows=93
 [2026-02-27T03:20:00.759294+00:00] [DATA POINT] {"id": 94, "timestamp": "2026-02-27T03:20:00Z", "date": "2026-02-27", "underlying": 25496.55, "ce_oi": 159923205.0, "pe_oi": 111740330.0, "total_ce_oi_value": 6336219454.5, "total_pe_oi_value": 5820091839.25}
 [2026-02-27T03:20:00.759294+00:00] [SUCCESS] Data saved – id=94 ts=2026-02-27T03:20:00Z
+[2026-02-27T10:43:42.776160+00:00] [STARTUP] Database initialised
+[2026-02-27T10:43:42.779692+00:00] [STARTUP] Session restored from DB — expiry=2026-03-02
+[2026-02-27T10:43:42.780717+00:00] [STARTUP] Python backend listening on http://localhost:4000
+[2026-02-27T10:43:42.780717+00:00] [STARTUP] Date IST: 2026-02-27
+[2026-02-27T10:43:42.918792+00:00] [SCHEDULER] APScheduler started — fetching every minute at :00
+[2026-02-27T10:44:02.368182+00:00] [REQUEST] POST /api/process - expiry: 2026-03-02
+[2026-02-27T10:44:02.403514+00:00] [UPSTOX FETCH] instrument=NSE_INDEX|Nifty 50 expiry=2026-03-02
+[2026-02-27T10:44:02.781837+00:00] [UPSTOX FETCH] status=success rows=93
+[2026-02-27T10:44:02.804294+00:00] [DATA POINT] {"id": 95, "timestamp": "2026-02-27T10:44:02Z", "date": "2026-02-27", "underlying": 25178.65, "ce_oi": 249218515.0, "pe_oi": 114150660.0, "total_ce_oi_value": 5074675476.0, "total_pe_oi_value": 7754118375.25}
+[2026-02-27T10:44:02.805293+00:00] [SUCCESS] Data saved – id=95 ts=2026-02-27T10:44:02Z
+[2026-02-27T10:45:01.110043+00:00] [REQUEST] POST /api/process - expiry: 2026-03-02
+[2026-02-27T10:45:01.120626+00:00] [UPSTOX FETCH] instrument=NSE_INDEX|Nifty 50 expiry=2026-03-02
+[2026-02-27T10:45:01.437743+00:00] [UPSTOX FETCH] status=success rows=93
+[2026-02-27T10:45:01.499977+00:00] [DATA POINT] {"id": 96, "timestamp": "2026-02-27T10:45:01Z", "date": "2026-02-27", "underlying": 25178.65, "ce_oi": 249218515.0, "pe_oi": 114150660.0, "total_ce_oi_value": 5074675476.0, "total_pe_oi_value": 7754118375.25}
+[2026-02-27T10:45:01.500489+00:00] [SUCCESS] Data saved – id=96 ts=2026-02-27T10:45:01Z
+[2026-02-27T10:46:01.185652+00:00] [REQUEST] POST /api/process - expiry: 2026-03-02
+[2026-02-27T10:46:01.198672+00:00] [UPSTOX FETCH] instrument=NSE_INDEX|Nifty 50 expiry=2026-03-02
+[2026-02-27T10:46:01.444771+00:00] [UPSTOX FETCH] status=success rows=93
+[2026-02-27T10:46:01.475321+00:00] [DATA POINT] {"id": 97, "timestamp": "2026-02-27T10:46:01Z", "date": "2026-02-27", "underlying": 25178.65, "ce_oi": 249218515.0, "pe_oi": 114150660.0, "total_ce_oi_value": 5074675476.0, "total_pe_oi_value": 7754118375.25}
+[2026-02-27T10:46:01.477344+00:00] [SUCCESS] Data saved – id=97 ts=2026-02-27T10:46:01Z
+[2026-02-27T10:47:01.113360+00:00] [REQUEST] POST /api/process - expiry: 2026-03-02
+[2026-02-27T10:47:01.124035+00:00] [UPSTOX FETCH] instrument=NSE_INDEX|Nifty 50 expiry=2026-03-02
+[2026-02-27T10:47:01.382897+00:00] [UPSTOX FETCH] status=success rows=93
+[2026-02-27T10:47:01.404634+00:00] [DATA POINT] {"id": 98, "timestamp": "2026-02-27T10:47:01Z", "date": "2026-02-27", "underlying": 25178.65, "ce_oi": 249218515.0, "pe_oi": 114150660.0, "total_ce_oi_value": 5074675476.0, "total_pe_oi_value": 7754118375.25}
+[2026-02-27T10:47:01.404634+00:00] [SUCCESS] Data saved – id=98 ts=2026-02-27T10:47:01Z
+[2026-02-27T10:48:01.386025+00:00] [REQUEST] POST /api/process - expiry: 2026-03-02
+[2026-02-27T10:48:01.395547+00:00] [UPSTOX FETCH] instrument=NSE_INDEX|Nifty 50 expiry=2026-03-02
+[2026-02-27T10:48:01.645582+00:00] [UPSTOX FETCH] status=success rows=93
+[2026-02-27T10:48:01.678172+00:00] [DATA POINT] {"id": 99, "timestamp": "2026-02-27T10:48:01Z", "date": "2026-02-27", "underlying": 25178.65, "ce_oi": 249218515.0, "pe_oi": 114150660.0, "total_ce_oi_value": 5074675476.0, "total_pe_oi_value": 7754118375.25}
+[2026-02-27T10:48:01.679204+00:00] [SUCCESS] Data saved – id=99 ts=2026-02-27T10:48:01Z
+[2026-02-27T10:49:01.367475+00:00] [REQUEST] POST /api/process - expiry: 2026-03-02
+[2026-02-27T10:49:01.378603+00:00] [UPSTOX FETCH] instrument=NSE_INDEX|Nifty 50 expiry=2026-03-02
+[2026-02-27T10:49:01.591134+00:00] [UPSTOX FETCH] status=success rows=93
+[2026-02-27T10:49:01.656896+00:00] [DATA POINT] {"id": 100, "timestamp": "2026-02-27T10:49:01Z", "date": "2026-02-27", "underlying": 25178.65, "ce_oi": 249218515.0, "pe_oi": 114150660.0, "total_ce_oi_value": 5074675476.0, "total_pe_oi_value": 7754118375.25}
+[2026-02-27T10:49:01.658670+00:00] [SUCCESS] Data saved – id=100 ts=2026-02-27T10:49:01Z
+[2026-02-27T10:50:01.375100+00:00] [REQUEST] POST /api/process - expiry: 2026-03-02
+[2026-02-27T10:50:01.385159+00:00] [UPSTOX FETCH] instrument=NSE_INDEX|Nifty 50 expiry=2026-03-02
+[2026-02-27T10:50:01.607793+00:00] [UPSTOX FETCH] status=success rows=93
+[2026-02-27T10:50:01.674144+00:00] [DATA POINT] {"id": 101, "timestamp": "2026-02-27T10:50:01Z", "date": "2026-02-27", "underlying": 25178.65, "ce_oi": 249218515.0, "pe_oi": 114150660.0, "total_ce_oi_value": 5074675476.0, "total_pe_oi_value": 7754118375.25}
+[2026-02-27T10:50:01.675160+00:00] [SUCCESS] Data saved – id=101 ts=2026-02-27T10:50:01Z
+[2026-02-27T10:51:01.373834+00:00] [REQUEST] POST /api/process - expiry: 2026-03-02
+[2026-02-27T10:51:01.385466+00:00] [UPSTOX FETCH] instrument=NSE_INDEX|Nifty 50 expiry=2026-03-02
+[2026-02-27T10:51:01.723438+00:00] [UPSTOX FETCH] status=success rows=93
+[2026-02-27T10:51:01.787039+00:00] [DATA POINT] {"id": 102, "timestamp": "2026-02-27T10:51:01Z", "date": "2026-02-27", "underlying": 25178.65, "ce_oi": 249218515.0, "pe_oi": 114150660.0, "total_ce_oi_value": 5074675476.0, "total_pe_oi_value": 7754118375.25}
+[2026-02-27T10:51:01.788064+00:00] [SUCCESS] Data saved – id=102 ts=2026-02-27T10:51:01Z
+[2026-02-27T10:52:01.376053+00:00] [REQUEST] POST /api/process - expiry: 2026-03-02
+[2026-02-27T10:52:01.388380+00:00] [UPSTOX FETCH] instrument=NSE_INDEX|Nifty 50 expiry=2026-03-02
+[2026-02-27T10:52:01.627657+00:00] [UPSTOX FETCH] status=success rows=93
+[2026-02-27T10:52:01.696184+00:00] [DATA POINT] {"id": 103, "timestamp": "2026-02-27T10:52:01Z", "date": "2026-02-27", "underlying": 25178.65, "ce_oi": 249218515.0, "pe_oi": 114150660.0, "total_ce_oi_value": 5074675476.0, "total_pe_oi_value": 7754118375.25}
+[2026-02-27T10:52:01.697179+00:00] [SUCCESS] Data saved – id=103 ts=2026-02-27T10:52:01Z
+[2026-02-27T10:53:01.370215+00:00] [REQUEST] POST /api/process - expiry: 2026-03-02
+[2026-02-27T10:53:01.382792+00:00] [UPSTOX FETCH] instrument=NSE_INDEX|Nifty 50 expiry=2026-03-02
+[2026-02-27T10:53:01.761482+00:00] [UPSTOX FETCH] status=success rows=93
+[2026-02-27T10:53:01.827514+00:00] [DATA POINT] {"id": 104, "timestamp": "2026-02-27T10:53:01Z", "date": "2026-02-27", "underlying": 25178.65, "ce_oi": 249218515.0, "pe_oi": 114150660.0, "total_ce_oi_value": 5074675476.0, "total_pe_oi_value": 7754118375.25}
+[2026-02-27T10:53:01.828523+00:00] [SUCCESS] Data saved – id=104 ts=2026-02-27T10:53:01Z
+[2026-02-27T10:53:49.494687+00:00] [REQUEST] POST /api/process - expiry: 2026-03-02
+[2026-02-27T10:53:49.507083+00:00] [CACHE HIT] Returning scheduler-saved data for minute 2026-02-27T10:53
+[2026-02-27T10:54:03.684117+00:00] [STARTUP] Database initialised
+[2026-02-27T10:54:03.688194+00:00] [STARTUP] Session restored from DB — expiry=2026-03-02
+[2026-02-27T10:54:03.688707+00:00] [STARTUP] Python backend listening on http://localhost:4000
+[2026-02-27T10:54:03.688707+00:00] [STARTUP] Date IST: 2026-02-27
+[2026-02-27T10:54:03.775989+00:00] [SCHEDULER] APScheduler started — fetching every minute at :00
+[2026-02-27T10:55:01.370405+00:00] [REQUEST] POST /api/process - expiry: 2026-03-02
+[2026-02-27T10:55:01.393623+00:00] [UPSTOX FETCH] instrument=NSE_INDEX|Nifty 50 expiry=2026-03-02
+[2026-02-27T10:55:01.776250+00:00] [UPSTOX FETCH] status=success rows=93
+[2026-02-27T10:55:01.798180+00:00] [DATA POINT] {"id": 105, "timestamp": "2026-02-27T10:55:01Z", "date": "2026-02-27", "underlying": 25178.65, "ce_oi": 249218515.0, "pe_oi": 114150660.0, "total_ce_oi_value": 5074675476.0, "total_pe_oi_value": 7754118375.25}
+[2026-02-27T10:55:01.799190+00:00] [SUCCESS] Data saved – id=105 ts=2026-02-27T10:55:01Z
+[2026-02-27T10:56:01.381648+00:00] [REQUEST] POST /api/process - expiry: 2026-03-02
+[2026-02-27T10:56:01.392684+00:00] [UPSTOX FETCH] instrument=NSE_INDEX|Nifty 50 expiry=2026-03-02
+[2026-02-27T10:56:01.723108+00:00] [UPSTOX FETCH] status=success rows=93
+[2026-02-27T10:56:01.789129+00:00] [DATA POINT] {"id": 106, "timestamp": "2026-02-27T10:56:01Z", "date": "2026-02-27", "underlying": 25178.65, "ce_oi": 249218515.0, "pe_oi": 114150660.0, "total_ce_oi_value": 5074675476.0, "total_pe_oi_value": 7754118375.25}
+[2026-02-27T10:56:01.790100+00:00] [SUCCESS] Data saved – id=106 ts=2026-02-27T10:56:01Z
+[2026-02-27T10:56:05.303072+00:00] [REQUEST] POST /api/process - expiry: 2026-03-02
+[2026-02-27T10:56:05.315195+00:00] [CACHE HIT] Returning scheduler-saved data for minute 2026-02-27T10:56
+[2026-02-27T10:57:04.105998+00:00] [REQUEST] POST /api/process - expiry: 2026-03-02
+[2026-02-27T10:57:04.117586+00:00] [UPSTOX FETCH] instrument=NSE_INDEX|Nifty 50 expiry=2026-03-02
+[2026-02-27T10:57:04.387453+00:00] [UPSTOX FETCH] status=success rows=93
+[2026-02-27T10:57:04.408800+00:00] [DATA POINT] {"id": 107, "timestamp": "2026-02-27T10:57:04Z", "date": "2026-02-27", "underlying": 25178.65, "ce_oi": 249218515.0, "pe_oi": 114150660.0, "total_ce_oi_value": 5074675476.0, "total_pe_oi_value": 7754118375.25}
+[2026-02-27T10:57:04.409881+00:00] [SUCCESS] Data saved – id=107 ts=2026-02-27T10:57:04Z
+[2026-02-27T10:58:02.105205+00:00] [REQUEST] POST /api/process - expiry: 2026-03-02
+[2026-02-27T10:58:02.117894+00:00] [UPSTOX FETCH] instrument=NSE_INDEX|Nifty 50 expiry=2026-03-02
+[2026-02-27T10:58:02.396215+00:00] [UPSTOX FETCH] status=success rows=93
+[2026-02-27T10:58:02.430969+00:00] [DATA POINT] {"id": 108, "timestamp": "2026-02-27T10:58:02Z", "date": "2026-02-27", "underlying": 25178.65, "ce_oi": 249218515.0, "pe_oi": 114150660.0, "total_ce_oi_value": 5074675476.0, "total_pe_oi_value": 7754118375.25}
+[2026-02-27T10:58:02.431969+00:00] [SUCCESS] Data saved – id=108 ts=2026-02-27T10:58:02Z
+[2026-02-27T10:59:01.112236+00:00] [REQUEST] POST /api/process - expiry: 2026-03-02
+[2026-02-27T10:59:01.126155+00:00] [UPSTOX FETCH] instrument=NSE_INDEX|Nifty 50 expiry=2026-03-02
+[2026-02-27T10:59:01.416606+00:00] [UPSTOX FETCH] status=success rows=93
+[2026-02-27T10:59:01.438528+00:00] [DATA POINT] {"id": 109, "timestamp": "2026-02-27T10:59:01Z", "date": "2026-02-27", "underlying": 25178.65, "ce_oi": 249218515.0, "pe_oi": 114150660.0, "total_ce_oi_value": 5074675476.0, "total_pe_oi_value": 7754118375.25}
+[2026-02-27T10:59:01.439518+00:00] [SUCCESS] Data saved – id=109 ts=2026-02-27T10:59:01Z
+[2026-02-27T11:00:01.112139+00:00] [REQUEST] POST /api/process - expiry: 2026-03-02
+[2026-02-27T11:00:01.127720+00:00] [UPSTOX FETCH] instrument=NSE_INDEX|Nifty 50 expiry=2026-03-02
+[2026-02-27T11:00:01.514756+00:00] [UPSTOX FETCH] status=success rows=93
+[2026-02-27T11:00:01.539554+00:00] [DATA POINT] {"id": 110, "timestamp": "2026-02-27T11:00:01Z", "date": "2026-02-27", "underlying": 25178.65, "ce_oi": 249218515.0, "pe_oi": 114150660.0, "total_ce_oi_value": 5074675476.0, "total_pe_oi_value": 7754118375.25}
+[2026-02-27T11:00:01.540545+00:00] [SUCCESS] Data saved – id=110 ts=2026-02-27T11:00:01Z
+[2026-02-27T11:01:01.115340+00:00] [REQUEST] POST /api/process - expiry: 2026-03-02
+[2026-02-27T11:01:01.126677+00:00] [UPSTOX FETCH] instrument=NSE_INDEX|Nifty 50 expiry=2026-03-02
+[2026-02-27T11:01:01.443091+00:00] [UPSTOX FETCH] status=success rows=93
+[2026-02-27T11:01:01.510436+00:00] [DATA POINT] {"id": 111, "timestamp": "2026-02-27T11:01:01Z", "date": "2026-02-27", "underlying": 25178.65, "ce_oi": 249218515.0, "pe_oi": 114150660.0, "total_ce_oi_value": 5074675476.0, "total_pe_oi_value": 7754118375.25}
+[2026-02-27T11:01:01.511416+00:00] [SUCCESS] Data saved – id=111 ts=2026-02-27T11:01:01Z
+[2026-02-27T11:02:01.115518+00:00] [REQUEST] POST /api/process - expiry: 2026-03-02
+[2026-02-27T11:02:01.127789+00:00] [UPSTOX FETCH] instrument=NSE_INDEX|Nifty 50 expiry=2026-03-02
+[2026-02-27T11:02:01.388296+00:00] [UPSTOX FETCH] status=success rows=93
+[2026-02-27T11:02:01.455068+00:00] [DATA POINT] {"id": 112, "timestamp": "2026-02-27T11:02:01Z", "date": "2026-02-27", "underlying": 25178.65, "ce_oi": 249218515.0, "pe_oi": 114150660.0, "total_ce_oi_value": 5074675476.0, "total_pe_oi_value": 7754118375.25}
+[2026-02-27T11:02:01.455068+00:00] [SUCCESS] Data saved – id=112 ts=2026-02-27T11:02:01Z
+[2026-02-27T11:02:52.475256+00:00] [REQUEST] POST /api/process - expiry: 2026-03-02
+[2026-02-27T11:02:52.489121+00:00] [CACHE HIT] Returning scheduler-saved data for minute 2026-02-27T11:02
+[2026-02-27T11:04:01.370288+00:00] [REQUEST] POST /api/process - expiry: 2026-03-02
+[2026-02-27T11:04:01.386322+00:00] [UPSTOX FETCH] instrument=NSE_INDEX|Nifty 50 expiry=2026-03-02
+[2026-02-27T11:04:01.805124+00:00] [UPSTOX FETCH] status=success rows=93
+[2026-02-27T11:04:01.872460+00:00] [DATA POINT] {"id": 113, "timestamp": "2026-02-27T11:04:01Z", "date": "2026-02-27", "underlying": 25178.65, "ce_oi": 249218515.0, "pe_oi": 114150660.0, "total_ce_oi_value": 5074675476.0, "total_pe_oi_value": 7754118375.25}
+[2026-02-27T11:04:01.872460+00:00] [SUCCESS] Data saved – id=113 ts=2026-02-27T11:04:01Z
+[2026-02-27T11:05:01.103446+00:00] [REQUEST] POST /api/process - expiry: 2026-03-02
+[2026-02-27T11:05:01.114778+00:00] [UPSTOX FETCH] instrument=NSE_INDEX|Nifty 50 expiry=2026-03-02
+[2026-02-27T11:05:01.430809+00:00] [UPSTOX FETCH] status=success rows=93
+[2026-02-27T11:05:01.496121+00:00] [DATA POINT] {"id": 114, "timestamp": "2026-02-27T11:05:01Z", "date": "2026-02-27", "underlying": 25178.65, "ce_oi": 249218515.0, "pe_oi": 114150660.0, "total_ce_oi_value": 5074675476.0, "total_pe_oi_value": 7754118375.25}
+[2026-02-27T11:05:01.497121+00:00] [SUCCESS] Data saved – id=114 ts=2026-02-27T11:05:01Z
+[2026-02-27T11:06:01.117565+00:00] [REQUEST] POST /api/process - expiry: 2026-03-02
+[2026-02-27T11:06:01.132746+00:00] [UPSTOX FETCH] instrument=NSE_INDEX|Nifty 50 expiry=2026-03-02
+[2026-02-27T11:06:01.431364+00:00] [UPSTOX FETCH] status=success rows=93
+[2026-02-27T11:06:01.500139+00:00] [DATA POINT] {"id": 115, "timestamp": "2026-02-27T11:06:01Z", "date": "2026-02-27", "underlying": 25178.65, "ce_oi": 249218515.0, "pe_oi": 114150660.0, "total_ce_oi_value": 5074675476.0, "total_pe_oi_value": 7754118375.25}
+[2026-02-27T11:06:01.501608+00:00] [SUCCESS] Data saved – id=115 ts=2026-02-27T11:06:01Z
+[2026-02-27T11:07:01.113681+00:00] [REQUEST] POST /api/process - expiry: 2026-03-02
+[2026-02-27T11:07:01.126049+00:00] [UPSTOX FETCH] instrument=NSE_INDEX|Nifty 50 expiry=2026-03-02
+[2026-02-27T11:07:01.553764+00:00] [UPSTOX FETCH] status=success rows=93
+[2026-02-27T11:07:01.619356+00:00] [DATA POINT] {"id": 116, "timestamp": "2026-02-27T11:07:01Z", "date": "2026-02-27", "underlying": 25178.65, "ce_oi": 249218515.0, "pe_oi": 114150660.0, "total_ce_oi_value": 5074675476.0, "total_pe_oi_value": 7754118375.25}
+[2026-02-27T11:07:01.620379+00:00] [SUCCESS] Data saved – id=116 ts=2026-02-27T11:07:01Z
+[2026-02-27T11:07:13.169150+00:00] [REQUEST] POST /api/process - expiry: 2026-03-02
+[2026-02-27T11:07:13.180288+00:00] [CACHE HIT] Returning scheduler-saved data for minute 2026-02-27T11:07
+[2026-02-27T11:08:44.379783+00:00] [REQUEST] POST /api/process - expiry: 2026-03-02
+[2026-02-27T11:08:44.395106+00:00] [UPSTOX FETCH] instrument=NSE_INDEX|Nifty 50 expiry=2026-03-02
+[2026-02-27T11:08:44.689302+00:00] [UPSTOX FETCH] status=success rows=93
+[2026-02-27T11:08:44.721487+00:00] [DATA POINT] {"id": 117, "timestamp": "2026-02-27T11:08:44Z", "date": "2026-02-27", "underlying": 25178.65, "ce_oi": 249218515.0, "pe_oi": 114150660.0, "total_ce_oi_value": 5074675476.0, "total_pe_oi_value": 7754118375.25}
+[2026-02-27T11:08:44.722537+00:00] [SUCCESS] Data saved – id=117 ts=2026-02-27T11:08:44Z
+[2026-02-27T11:10:01.115192+00:00] [REQUEST] POST /api/process - expiry: 2026-03-02
+[2026-02-27T11:10:01.129864+00:00] [UPSTOX FETCH] instrument=NSE_INDEX|Nifty 50 expiry=2026-03-02
+[2026-02-27T11:10:01.372309+00:00] [UPSTOX FETCH] status=success rows=93
+[2026-02-27T11:10:01.403488+00:00] [DATA POINT] {"id": 118, "timestamp": "2026-02-27T11:10:01Z", "date": "2026-02-27", "underlying": 25178.65, "ce_oi": 249218515.0, "pe_oi": 114150660.0, "total_ce_oi_value": 5074675476.0, "total_pe_oi_value": 7754118375.25}
+[2026-02-27T11:10:01.404645+00:00] [SUCCESS] Data saved – id=118 ts=2026-02-27T11:10:01Z
+[2026-02-27T11:10:05.167206+00:00] [REQUEST] POST /api/process - expiry: 2026-03-02
+[2026-02-27T11:10:05.179362+00:00] [CACHE HIT] Returning scheduler-saved data for minute 2026-02-27T11:10
+[2026-02-27T11:11:04.373804+00:00] [REQUEST] POST /api/process - expiry: 2026-03-02
+[2026-02-27T11:11:04.394505+00:00] [UPSTOX FETCH] instrument=NSE_INDEX|Nifty 50 expiry=2026-03-02
+[2026-02-27T11:11:04.704281+00:00] [UPSTOX FETCH] status=success rows=93
+[2026-02-27T11:11:04.785191+00:00] [DATA POINT] {"id": 119, "timestamp": "2026-02-27T11:11:04Z", "date": "2026-02-27", "underlying": 25178.65, "ce_oi": 249218515.0, "pe_oi": 114150660.0, "total_ce_oi_value": 5074675476.0, "total_pe_oi_value": 7754118375.25}
+[2026-02-27T11:11:04.785191+00:00] [SUCCESS] Data saved – id=119 ts=2026-02-27T11:11:04Z
+[2026-02-27T11:12:02.116343+00:00] [REQUEST] POST /api/process - expiry: 2026-03-02
+[2026-02-27T11:12:02.125994+00:00] [UPSTOX FETCH] instrument=NSE_INDEX|Nifty 50 expiry=2026-03-02
+[2026-02-27T11:12:02.412504+00:00] [UPSTOX FETCH] status=success rows=93
+[2026-02-27T11:12:02.475235+00:00] [DATA POINT] {"id": 120, "timestamp": "2026-02-27T11:12:02Z", "date": "2026-02-27", "underlying": 25178.65, "ce_oi": 249218515.0, "pe_oi": 114150660.0, "total_ce_oi_value": 5074675476.0, "total_pe_oi_value": 7754118375.25}
+[2026-02-27T11:12:02.476252+00:00] [SUCCESS] Data saved – id=120 ts=2026-02-27T11:12:02Z
+[2026-02-27T11:13:01.375965+00:00] [REQUEST] POST /api/process - expiry: 2026-03-02
+[2026-02-27T11:13:01.387177+00:00] [UPSTOX FETCH] instrument=NSE_INDEX|Nifty 50 expiry=2026-03-02
+[2026-02-27T11:13:01.629670+00:00] [UPSTOX FETCH] status=success rows=93
+[2026-02-27T11:13:01.694889+00:00] [DATA POINT] {"id": 121, "timestamp": "2026-02-27T11:13:01Z", "date": "2026-02-27", "underlying": 25178.65, "ce_oi": 249218515.0, "pe_oi": 114150660.0, "total_ce_oi_value": 5074675476.0, "total_pe_oi_value": 7754118375.25}
+[2026-02-27T11:13:01.695909+00:00] [SUCCESS] Data saved – id=121 ts=2026-02-27T11:13:01Z
+[2026-02-27T11:14:01.368346+00:00] [REQUEST] POST /api/process - expiry: 2026-03-02
+[2026-02-27T11:14:01.381659+00:00] [UPSTOX FETCH] instrument=NSE_INDEX|Nifty 50 expiry=2026-03-02
+[2026-02-27T11:14:01.677920+00:00] [UPSTOX FETCH] status=success rows=93
+[2026-02-27T11:14:01.706793+00:00] [DATA POINT] {"id": 122, "timestamp": "2026-02-27T11:14:01Z", "date": "2026-02-27", "underlying": 25178.65, "ce_oi": 249218515.0, "pe_oi": 114150660.0, "total_ce_oi_value": 5074675476.0, "total_pe_oi_value": 7754118375.25}
+[2026-02-27T11:14:01.707872+00:00] [SUCCESS] Data saved – id=122 ts=2026-02-27T11:14:01Z
+[2026-02-27T11:15:01.381847+00:00] [REQUEST] POST /api/process - expiry: 2026-03-02
+[2026-02-27T11:15:01.393636+00:00] [UPSTOX FETCH] instrument=NSE_INDEX|Nifty 50 expiry=2026-03-02
+[2026-02-27T11:15:01.642330+00:00] [UPSTOX FETCH] status=success rows=93
+[2026-02-27T11:15:01.707426+00:00] [DATA POINT] {"id": 123, "timestamp": "2026-02-27T11:15:01Z", "date": "2026-02-27", "underlying": 25178.65, "ce_oi": 249218515.0, "pe_oi": 114150660.0, "total_ce_oi_value": 5074675476.0, "total_pe_oi_value": 7754118375.25}
+[2026-02-27T11:15:01.707426+00:00] [SUCCESS] Data saved – id=123 ts=2026-02-27T11:15:01Z
+[2026-02-27T11:16:01.372369+00:00] [REQUEST] POST /api/process - expiry: 2026-03-02
+[2026-02-27T11:16:01.389328+00:00] [UPSTOX FETCH] instrument=NSE_INDEX|Nifty 50 expiry=2026-03-02
+[2026-02-27T11:16:01.646101+00:00] [UPSTOX FETCH] status=success rows=93
+[2026-02-27T11:16:01.709516+00:00] [DATA POINT] {"id": 124, "timestamp": "2026-02-27T11:16:01Z", "date": "2026-02-27", "underlying": 25178.65, "ce_oi": 249218515.0, "pe_oi": 114150660.0, "total_ce_oi_value": 5074675476.0, "total_pe_oi_value": 7754118375.25}
+[2026-02-27T11:16:01.710527+00:00] [SUCCESS] Data saved – id=124 ts=2026-02-27T11:16:01Z
+[2026-02-27T11:16:39.664282+00:00] [REQUEST] POST /api/process - expiry: 2026-03-02
+[2026-02-27T11:16:39.677626+00:00] [CACHE HIT] Returning scheduler-saved data for minute 2026-02-27T11:16
+[2026-02-27T11:17:00.880747+00:00] [REQUEST] POST /api/process - expiry: 2026-03-02
+[2026-02-27T11:17:00.893296+00:00] [UPSTOX FETCH] instrument=NSE_INDEX|Nifty 50 expiry=2026-03-02
+[2026-02-27T11:17:01.163804+00:00] [UPSTOX FETCH] status=success rows=93
+[2026-02-27T11:17:01.229344+00:00] [DATA POINT] {"id": 125, "timestamp": "2026-02-27T11:17:01Z", "date": "2026-02-27", "underlying": 25178.65, "ce_oi": 249218515.0, "pe_oi": 114150660.0, "total_ce_oi_value": 5074675476.0, "total_pe_oi_value": 7754118375.25}
+[2026-02-27T11:17:01.230345+00:00] [SUCCESS] Data saved – id=125 ts=2026-02-27T11:17:01Z
+[2026-02-27T11:18:00.891692+00:00] [REQUEST] POST /api/process - expiry: 2026-03-02
+[2026-02-27T11:18:00.903296+00:00] [UPSTOX FETCH] instrument=NSE_INDEX|Nifty 50 expiry=2026-03-02
+[2026-02-27T11:18:01.170205+00:00] [UPSTOX FETCH] status=success rows=93
+[2026-02-27T11:18:01.231895+00:00] [DATA POINT] {"id": 126, "timestamp": "2026-02-27T11:18:01Z", "date": "2026-02-27", "underlying": 25178.65, "ce_oi": 249218515.0, "pe_oi": 114150660.0, "total_ce_oi_value": 5074675476.0, "total_pe_oi_value": 7754118375.25}
+[2026-02-27T11:18:01.231895+00:00] [SUCCESS] Data saved – id=126 ts=2026-02-27T11:18:01Z
+[2026-02-27T11:19:00.887411+00:00] [REQUEST] POST /api/process - expiry: 2026-03-02
+[2026-02-27T11:19:00.899202+00:00] [UPSTOX FETCH] instrument=NSE_INDEX|Nifty 50 expiry=2026-03-02
+[2026-02-27T11:19:01.200437+00:00] [UPSTOX FETCH] status=success rows=93
+[2026-02-27T11:19:01.262573+00:00] [DATA POINT] {"id": 127, "timestamp": "2026-02-27T11:19:01Z", "date": "2026-02-27", "underlying": 25178.65, "ce_oi": 249218515.0, "pe_oi": 114150660.0, "total_ce_oi_value": 5074675476.0, "total_pe_oi_value": 7754118375.25}
+[2026-02-27T11:19:01.262573+00:00] [SUCCESS] Data saved – id=127 ts=2026-02-27T11:19:01Z
+[2026-02-27T11:19:16.004135+00:00] [REQUEST] POST /api/process - expiry: 2026-03-02
+[2026-02-27T11:19:16.021520+00:00] [CACHE HIT] Returning scheduler-saved data for minute 2026-02-27T11:19
+[2026-02-27T11:19:58.059734+00:00] [REQUEST] POST /api/process - expiry: 2026-03-02
+[2026-02-27T11:19:58.070296+00:00] [CACHE HIT] Returning scheduler-saved data for minute 2026-02-27T11:19
+[2026-02-27T11:21:00.785135+00:00] [REQUEST] POST /api/process - expiry: 2026-03-02
+[2026-02-27T11:21:00.796739+00:00] [UPSTOX FETCH] instrument=NSE_INDEX|Nifty 50 expiry=2026-03-02
+[2026-02-27T11:21:01.033756+00:00] [UPSTOX FETCH] status=success rows=93
+[2026-02-27T11:21:01.097168+00:00] [DATA POINT] {"id": 128, "timestamp": "2026-02-27T11:21:01Z", "date": "2026-02-27", "underlying": 25178.65, "ce_oi": 249218515.0, "pe_oi": 114150660.0, "total_ce_oi_value": 5074675476.0, "total_pe_oi_value": 7754118375.25}
+[2026-02-27T11:21:01.098160+00:00] [SUCCESS] Data saved – id=128 ts=2026-02-27T11:21:01Z
+[2026-02-27T11:22:01.117058+00:00] [REQUEST] POST /api/process - expiry: 2026-03-02
+[2026-02-27T11:22:01.134384+00:00] [UPSTOX FETCH] instrument=NSE_INDEX|Nifty 50 expiry=2026-03-02
+[2026-02-27T11:22:01.361121+00:00] [UPSTOX FETCH] status=success rows=93
+[2026-02-27T11:22:01.392940+00:00] [DATA POINT] {"id": 129, "timestamp": "2026-02-27T11:22:01Z", "date": "2026-02-27", "underlying": 25178.65, "ce_oi": 249218515.0, "pe_oi": 114150660.0, "total_ce_oi_value": 5074675476.0, "total_pe_oi_value": 7754118375.25}
+[2026-02-27T11:22:01.393939+00:00] [SUCCESS] Data saved – id=129 ts=2026-02-27T11:22:01Z
+[2026-02-27T11:23:01.118683+00:00] [REQUEST] POST /api/process - expiry: 2026-03-02
+[2026-02-27T11:23:01.132771+00:00] [UPSTOX FETCH] instrument=NSE_INDEX|Nifty 50 expiry=2026-03-02
+[2026-02-27T11:23:01.382989+00:00] [UPSTOX FETCH] status=success rows=93
+[2026-02-27T11:23:01.451276+00:00] [DATA POINT] {"id": 130, "timestamp": "2026-02-27T11:23:01Z", "date": "2026-02-27", "underlying": 25178.65, "ce_oi": 249218515.0, "pe_oi": 114150660.0, "total_ce_oi_value": 5074675476.0, "total_pe_oi_value": 7754118375.25}
+[2026-02-27T11:23:01.451793+00:00] [SUCCESS] Data saved – id=130 ts=2026-02-27T11:23:01Z
+[2026-02-27T11:24:01.110945+00:00] [REQUEST] POST /api/process - expiry: 2026-03-02
+[2026-02-27T11:24:01.121979+00:00] [UPSTOX FETCH] instrument=NSE_INDEX|Nifty 50 expiry=2026-03-02
+[2026-02-27T11:24:01.350203+00:00] [UPSTOX FETCH] status=success rows=93
+[2026-02-27T11:24:01.414699+00:00] [DATA POINT] {"id": 131, "timestamp": "2026-02-27T11:24:01Z", "date": "2026-02-27", "underlying": 25178.65, "ce_oi": 249218515.0, "pe_oi": 114150660.0, "total_ce_oi_value": 5074675476.0, "total_pe_oi_value": 7754118375.25}
+[2026-02-27T11:24:01.415698+00:00] [SUCCESS] Data saved – id=131 ts=2026-02-27T11:24:01Z
+[2026-02-27T11:25:01.107018+00:00] [REQUEST] POST /api/process - expiry: 2026-03-02
+[2026-02-27T11:25:01.120158+00:00] [UPSTOX FETCH] instrument=NSE_INDEX|Nifty 50 expiry=2026-03-02
+[2026-02-27T11:25:01.373667+00:00] [UPSTOX FETCH] status=success rows=93
+[2026-02-27T11:25:01.436038+00:00] [DATA POINT] {"id": 132, "timestamp": "2026-02-27T11:25:01Z", "date": "2026-02-27", "underlying": 25178.65, "ce_oi": 249218515.0, "pe_oi": 114150660.0, "total_ce_oi_value": 5074675476.0, "total_pe_oi_value": 7754118375.25}
+[2026-02-27T11:25:01.437034+00:00] [SUCCESS] Data saved – id=132 ts=2026-02-27T11:25:01Z
+[2026-02-27T11:26:00.644375+00:00] [REQUEST] POST /api/process - expiry: 2026-03-02
+[2026-02-27T11:26:00.660395+00:00] [UPSTOX FETCH] instrument=NSE_INDEX|Nifty 50 expiry=2026-03-02
+[2026-02-27T11:26:01.013924+00:00] [UPSTOX FETCH] status=success rows=93
+[2026-02-27T11:26:01.051461+00:00] [DATA POINT] {"id": 133, "timestamp": "2026-02-27T11:26:01Z", "date": "2026-02-27", "underlying": 25178.65, "ce_oi": 249218515.0, "pe_oi": 114150660.0, "total_ce_oi_value": 5074675476.0, "total_pe_oi_value": 7754118375.25}
+[2026-02-27T11:26:01.052482+00:00] [SUCCESS] Data saved – id=133 ts=2026-02-27T11:26:01Z
+[2026-02-27T11:27:00.381211+00:00] [REQUEST] POST /api/process - expiry: 2026-03-02
+[2026-02-27T11:27:00.396272+00:00] [UPSTOX FETCH] instrument=NSE_INDEX|Nifty 50 expiry=2026-03-02
+[2026-02-27T11:27:00.630639+00:00] [UPSTOX FETCH] status=success rows=93
+[2026-02-27T11:27:00.649078+00:00] [DATA POINT] {"id": 134, "timestamp": "2026-02-27T11:27:00Z", "date": "2026-02-27", "underlying": 25178.65, "ce_oi": 249218515.0, "pe_oi": 114150660.0, "total_ce_oi_value": 5074675476.0, "total_pe_oi_value": 7754118375.25}
+[2026-02-27T11:27:00.650077+00:00] [SUCCESS] Data saved – id=134 ts=2026-02-27T11:27:00Z
+[2026-02-27T11:28:00.393072+00:00] [REQUEST] POST /api/process - expiry: 2026-03-02
+[2026-02-27T11:28:00.411939+00:00] [UPSTOX FETCH] instrument=NSE_INDEX|Nifty 50 expiry=2026-03-02
+[2026-02-27T11:28:00.671516+00:00] [UPSTOX FETCH] status=success rows=93
+[2026-02-27T11:28:00.693781+00:00] [DATA POINT] {"id": 135, "timestamp": "2026-02-27T11:28:00Z", "date": "2026-02-27", "underlying": 25178.65, "ce_oi": 249218515.0, "pe_oi": 114150660.0, "total_ce_oi_value": 5074675476.0, "total_pe_oi_value": 7754118375.25}
+[2026-02-27T11:28:00.693781+00:00] [SUCCESS] Data saved – id=135 ts=2026-02-27T11:28:00Z
+[2026-02-27T11:29:00.390614+00:00] [REQUEST] POST /api/process - expiry: 2026-03-02
+[2026-02-27T11:29:00.403200+00:00] [UPSTOX FETCH] instrument=NSE_INDEX|Nifty 50 expiry=2026-03-02
+[2026-02-27T11:29:00.640270+00:00] [UPSTOX FETCH] status=success rows=93
+[2026-02-27T11:29:00.703240+00:00] [DATA POINT] {"id": 136, "timestamp": "2026-02-27T11:29:00Z", "date": "2026-02-27", "underlying": 25178.65, "ce_oi": 249218515.0, "pe_oi": 114150660.0, "total_ce_oi_value": 5074675476.0, "total_pe_oi_value": 7754118375.25}
+[2026-02-27T11:29:00.703745+00:00] [SUCCESS] Data saved – id=136 ts=2026-02-27T11:29:00Z
+[2026-02-27T11:30:00.381408+00:00] [REQUEST] POST /api/process - expiry: 2026-03-02
+[2026-02-27T11:30:00.393079+00:00] [UPSTOX FETCH] instrument=NSE_INDEX|Nifty 50 expiry=2026-03-02
+[2026-02-27T11:30:00.614311+00:00] [UPSTOX FETCH] status=success rows=93
+[2026-02-27T11:30:00.646059+00:00] [DATA POINT] {"id": 137, "timestamp": "2026-02-27T11:30:00Z", "date": "2026-02-27", "underlying": 25178.65, "ce_oi": 249218515.0, "pe_oi": 114150660.0, "total_ce_oi_value": 5074675476.0, "total_pe_oi_value": 7754118375.25}
+[2026-02-27T11:30:00.647061+00:00] [SUCCESS] Data saved – id=137 ts=2026-02-27T11:30:00Z
+[2026-02-27T11:30:27.437870+00:00] [REQUEST] POST /api/process - expiry: 2026-03-02
+[2026-02-27T11:30:27.451424+00:00] [CACHE HIT] Returning scheduler-saved data for minute 2026-02-27T11:30
+[2026-02-27T11:31:01.280759+00:00] [REQUEST] POST /api/process - expiry: 2026-03-02
+[2026-02-27T11:31:01.293995+00:00] [UPSTOX FETCH] instrument=NSE_INDEX|Nifty 50 expiry=2026-03-02
+[2026-02-27T11:31:01.548783+00:00] [UPSTOX FETCH] status=success rows=93
+[2026-02-27T11:31:01.614574+00:00] [DATA POINT] {"id": 138, "timestamp": "2026-02-27T11:31:01Z", "date": "2026-02-27", "underlying": 25178.65, "ce_oi": 249218515.0, "pe_oi": 114150660.0, "total_ce_oi_value": 5074675476.0, "total_pe_oi_value": 7754118375.25}
+[2026-02-27T11:31:01.615869+00:00] [SUCCESS] Data saved – id=138 ts=2026-02-27T11:31:01Z
+[2026-02-27T11:32:01.018841+00:00] [REQUEST] POST /api/process - expiry: 2026-03-02
+[2026-02-27T11:32:01.034561+00:00] [UPSTOX FETCH] instrument=NSE_INDEX|Nifty 50 expiry=2026-03-02
+[2026-02-27T11:32:01.279305+00:00] [UPSTOX FETCH] status=success rows=93
+[2026-02-27T11:32:01.345617+00:00] [DATA POINT] {"id": 139, "timestamp": "2026-02-27T11:32:01Z", "date": "2026-02-27", "underlying": 25178.65, "ce_oi": 249218515.0, "pe_oi": 114150660.0, "total_ce_oi_value": 5074675476.0, "total_pe_oi_value": 7754118375.25}
+[2026-02-27T11:32:01.345617+00:00] [SUCCESS] Data saved – id=139 ts=2026-02-27T11:32:01Z
+[2026-02-27T11:33:01.017419+00:00] [REQUEST] POST /api/process - expiry: 2026-03-02
+[2026-02-27T11:33:01.034214+00:00] [UPSTOX FETCH] instrument=NSE_INDEX|Nifty 50 expiry=2026-03-02
+[2026-02-27T11:33:01.439384+00:00] [UPSTOX FETCH] status=success rows=93
+[2026-02-27T11:33:01.504033+00:00] [DATA POINT] {"id": 140, "timestamp": "2026-02-27T11:33:01Z", "date": "2026-02-27", "underlying": 25178.65, "ce_oi": 249218515.0, "pe_oi": 114150660.0, "total_ce_oi_value": 5074675476.0, "total_pe_oi_value": 7754118375.25}
+[2026-02-27T11:33:01.505036+00:00] [SUCCESS] Data saved – id=140 ts=2026-02-27T11:33:01Z
+[2026-02-27T11:34:01.024116+00:00] [REQUEST] POST /api/process - expiry: 2026-03-02
+[2026-02-27T11:34:01.041476+00:00] [UPSTOX FETCH] instrument=NSE_INDEX|Nifty 50 expiry=2026-03-02
+[2026-02-27T11:34:01.309973+00:00] [UPSTOX FETCH] status=success rows=93
+[2026-02-27T11:34:01.379511+00:00] [DATA POINT] {"id": 141, "timestamp": "2026-02-27T11:34:01Z", "date": "2026-02-27", "underlying": 25178.65, "ce_oi": 249218515.0, "pe_oi": 114150660.0, "total_ce_oi_value": 5074675476.0, "total_pe_oi_value": 7754118375.25}
+[2026-02-27T11:34:01.379511+00:00] [SUCCESS] Data saved – id=141 ts=2026-02-27T11:34:01Z
+[2026-02-27T11:35:01.283192+00:00] [REQUEST] POST /api/process - expiry: 2026-03-02
+[2026-02-27T11:35:01.297256+00:00] [UPSTOX FETCH] instrument=NSE_INDEX|Nifty 50 expiry=2026-03-02
+[2026-02-27T11:35:01.573788+00:00] [UPSTOX FETCH] status=success rows=93
+[2026-02-27T11:35:01.639531+00:00] [DATA POINT] {"id": 142, "timestamp": "2026-02-27T11:35:01Z", "date": "2026-02-27", "underlying": 25178.65, "ce_oi": 249218515.0, "pe_oi": 114150660.0, "total_ce_oi_value": 5074675476.0, "total_pe_oi_value": 7754118375.25}
+[2026-02-27T11:35:01.640528+00:00] [SUCCESS] Data saved – id=142 ts=2026-02-27T11:35:01Z
+[2026-02-27T11:36:01.290872+00:00] [REQUEST] POST /api/process - expiry: 2026-03-02
+[2026-02-27T11:36:01.305401+00:00] [UPSTOX FETCH] instrument=NSE_INDEX|Nifty 50 expiry=2026-03-02
+[2026-02-27T11:36:01.559675+00:00] [UPSTOX FETCH] status=success rows=93
+[2026-02-27T11:36:01.631502+00:00] [DATA POINT] {"id": 143, "timestamp": "2026-02-27T11:36:01Z", "date": "2026-02-27", "underlying": 25178.65, "ce_oi": 249218515.0, "pe_oi": 114150660.0, "total_ce_oi_value": 5074675476.0, "total_pe_oi_value": 7754118375.25}
+[2026-02-27T11:36:01.633007+00:00] [SUCCESS] Data saved – id=143 ts=2026-02-27T11:36:01Z
+[2026-02-27T11:36:52.827772+00:00] [STARTUP] Database initialised
+[2026-02-27T11:36:52.830784+00:00] [STARTUP] Session restored from DB — expiry=2026-03-02
+[2026-02-27T11:36:52.831788+00:00] [STARTUP] Python backend listening on http://localhost:4000
+[2026-02-27T11:36:52.831788+00:00] [STARTUP] Date IST: 2026-02-27
+[2026-02-27T11:36:52.941060+00:00] [SCHEDULER] APScheduler started — fetching every minute at :00
+[2026-02-27T11:37:01.287300+00:00] [REQUEST] POST /api/process - expiry: 2026-03-02
+[2026-02-27T11:37:01.359017+00:00] [UPSTOX FETCH] instrument=NSE_INDEX|Nifty 50 expiry=2026-03-02
+[2026-02-27T11:37:01.715134+00:00] [UPSTOX FETCH] status=success rows=93
+[2026-02-27T11:37:01.735634+00:00] [DATA POINT] {"id": 144, "timestamp": "2026-02-27T11:37:01Z", "date": "2026-02-27", "underlying": 25178.65, "ce_oi": 249218515.0, "pe_oi": 114150660.0, "total_ce_oi_value": 5074675476.0, "total_pe_oi_value": 7754118375.25}
+[2026-02-27T11:37:01.735634+00:00] [SUCCESS] Data saved – id=144 ts=2026-02-27T11:37:01Z

@@ -118,13 +118,20 @@ function formatTimestamp(unixSeconds) {
 
 function useDualPaneChart(containerRef, { data1, color1, id1, data2, color2, id2, hasPane2 }) {
   const chartRef = useRef(null);
-  const series1Ref = useRef([]);  // array of LineSeries (one per gap-segment)
+  const series1Ref = useRef([]);
   const series2Ref = useRef([]);
+  const priceLine1Ref = useRef(null);
+  const priceLine2Ref = useRef(null);
+  const data1Ref = useRef(data1); // always-current data, readable from stale closures
+  const data2Ref = useRef(data2);
   const prevId1 = useRef(id1);
   const prevId2 = useRef(id2);
-  const prevHasPane2 = useRef(hasPane2); // track transition true→false for one-shot resize
-  // FIX: crosshair value display — track hovered values for both panes
+  const prevHasPane2 = useRef(hasPane2);
   const [crosshairVals, setCrosshairVals] = useState({ v1: null, v2: null });
+
+  // Keep data refs fresh on every render
+  data1Ref.current = data1;
+  data2Ref.current = data2;
 
   // Create chart once
   useEffect(() => {
@@ -158,17 +165,29 @@ function useDualPaneChart(containerRef, { data1, color1, id1, data2, color2, id2
         rightPriceScale: { visible: true },
         crosshair: {
           mode: 1,
-          vertLine: { color: '#d1d5db', labelBackgroundColor: '#f3f4f6' },
-          horzLine: { color: '#d1d5db', labelBackgroundColor: '#f3f4f6' },
+          vertLine: {
+            color: '#b2b5be',
+            width: 1,
+            style: 3,                       // large dashed — TradingView style
+            labelBackgroundColor: '#1e293b',
+          },
+          horzLine: {
+            color: '#b2b5be',
+            width: 1,
+            style: 3,
+            labelBackgroundColor: '#1e293b',
+          },
         },
         width: el.clientWidth,
         height: el.clientHeight,
       });
       chartRef.current = chart;
 
-      // FIX: crosshair subscription — update values shown next to pane labels on hover
+      // Crosshair move: update label values AND mirror horizontal line to both panes
       chart.subscribeCrosshairMove(param => {
         let v1 = null, v2 = null;
+
+        // 1. Try to read values directly from the param (works for the active pane)
         if (param.seriesData) {
           for (const s of series1Ref.current) {
             const d = param.seriesData.get(s);
@@ -179,7 +198,60 @@ function useDualPaneChart(containerRef, { data1, color1, id1, data2, color2, id2
             if (d?.value !== undefined) { v2 = d.value; break; }
           }
         }
+
+        // 2. If one pane's value is missing (cursor is in the OTHER pane),
+        //    look it up by timestamp from the data ref — this is what makes
+        //    the horizontal line appear in BOTH panes regardless of which one
+        //    the cursor is currently in.
+        if (param.time != null) {
+          const t = typeof param.time === 'number' ? param.time : param.time;
+          if (v1 === null) {
+            const pt = data1Ref.current.find(p => p.time === t);
+            if (pt) v1 = pt.value;
+          }
+          if (v2 === null) {
+            const pt = data2Ref.current.find(p => p.time === t);
+            if (pt) v2 = pt.value;
+          }
+        }
+
         setCrosshairVals({ v1, v2 });
+
+        // 3. Update mirrored price lines on both panes.
+        //    axisLabelVisible:true  → price number appears on the right scale.
+        const plStyle = {
+          color: '#b2b5be',
+          lineWidth: 1,
+          lineStyle: 3,
+          axisLabelVisible: true,
+          title: '',
+        };
+
+        const anchor1 = series1Ref.current[0];
+        if (anchor1) {
+          if (v1 !== null) {
+            if (!priceLine1Ref.current) {
+              priceLine1Ref.current = anchor1.createPriceLine({ ...plStyle, price: v1 });
+            } else {
+              priceLine1Ref.current.applyOptions({ price: v1, lineVisible: true, axisLabelVisible: true });
+            }
+          } else if (priceLine1Ref.current) {
+            priceLine1Ref.current.applyOptions({ lineVisible: false, axisLabelVisible: false });
+          }
+        }
+
+        const anchor2 = series2Ref.current[0];
+        if (anchor2) {
+          if (v2 !== null) {
+            if (!priceLine2Ref.current) {
+              priceLine2Ref.current = anchor2.createPriceLine({ ...plStyle, price: v2 });
+            } else {
+              priceLine2Ref.current.applyOptions({ price: v2, lineVisible: true, axisLabelVisible: true });
+            }
+          } else if (priceLine2Ref.current) {
+            priceLine2Ref.current.applyOptions({ lineVisible: false, axisLabelVisible: false });
+          }
+        }
       });
 
       // Resize observer
@@ -225,8 +297,15 @@ function useDualPaneChart(containerRef, { data1, color1, id1, data2, color2, id2
     segments.forEach((seg, i) => {
       const isLast = i === segments.length - 1;
       if (series1Ref.current[i]) {
-        // In-place update handles both regular refresh and indicator change
-        series1Ref.current[i].applyOptions({ color: color1, lastValueVisible: isLast });
+        series1Ref.current[i].applyOptions({
+          color: color1,
+          lastValueVisible: isLast,
+          crosshairMarkerVisible: true,
+          crosshairMarkerRadius: 5,
+          crosshairMarkerBorderColor: '#ffffff',
+          crosshairMarkerBorderWidth: 2,
+          crosshairMarkerBackgroundColor: color1,
+        });
         series1Ref.current[i].setData(seg);
       } else {
         const s = chart.addSeries(LineSeries, {
@@ -234,7 +313,12 @@ function useDualPaneChart(containerRef, { data1, color1, id1, data2, color2, id2
           lineWidth: 2,
           priceLineVisible: false,
           lastValueVisible: isLast,
-        }, 0); // explicit pane 0
+          crosshairMarkerVisible: true,
+          crosshairMarkerRadius: 5,
+          crosshairMarkerBorderColor: '#ffffff',
+          crosshairMarkerBorderWidth: 2,
+          crosshairMarkerBackgroundColor: color1,
+        }, 0);
         s.setData(seg);
         series1Ref.current.push(s);
       }
@@ -302,8 +386,12 @@ function useDualPaneChart(containerRef, { data1, color1, id1, data2, color2, id2
       if (series2Ref.current[i]) {
         series2Ref.current[i].applyOptions({
           color: color2,
-          // FIX: only the last segment shows the latest-price highlight
           lastValueVisible: isLast,
+          crosshairMarkerVisible: true,
+          crosshairMarkerRadius: 5,
+          crosshairMarkerBorderColor: '#ffffff',
+          crosshairMarkerBorderWidth: 2,
+          crosshairMarkerBackgroundColor: color2,
         });
         series2Ref.current[i].setData(seg);
       } else {
@@ -313,10 +401,14 @@ function useDualPaneChart(containerRef, { data1, color1, id1, data2, color2, id2
             color: color2,
             lineWidth: 2,
             priceLineVisible: false,
-            // FIX: latest price highlight on last segment only
             lastValueVisible: isLast,
+            crosshairMarkerVisible: true,
+            crosshairMarkerRadius: 5,
+            crosshairMarkerBorderColor: '#ffffff',
+            crosshairMarkerBorderWidth: 2,
+            crosshairMarkerBackgroundColor: color2,
           },
-          1, // pane index 1
+          1,
         );
         s.setData(seg);
         series2Ref.current.push(s);
@@ -386,8 +478,11 @@ export default function App() {
   const [newIndFormula, setNewIndFormula] = useState('');
   const [addError, setAddError] = useState('');
 
-  const pollTimeoutRef = useRef(null);  // FIX: setTimeout ref instead of setInterval
-  const isPollingRef = useRef(false);   // FIX: lock prevents double-entry
+  // Worker-based ticker — immune to browser background-tab throttling
+  const workerRef = useRef(null);
+  const isPollingRef = useRef(false);
+  const lastPollTimeRef = useRef(0);   // unix-ms of last successful OR attempted poll
+  const isPollInFlightRef = useRef(false); // prevent overlapping doPoll calls
   const tokenRef = useRef('');
   const expiryRef = useRef('');
   const containerRef = useRef(null);
@@ -449,19 +544,26 @@ export default function App() {
 
   useEffect(() => { loadCustomIndicators(); }, [loadCustomIndicators]);
 
-  // ── Polling ──────────────────────────────────────────────────────────────
-  const fetchHistory = useCallback(async () => {
-    try {
-      const resp = await fetch(`${BACKEND_BASE}/api/history`);
-      if (!resp.ok) return [];
-      const data = await resp.json();
-      return Array.isArray(data) ? data : [];
-    } catch { return []; }
-  }, []);
+  // ── Polling (Web Worker ticker — immune to background-tab throttling) ────
+  //
+  // WHY A WORKER?
+  // Browsers throttle setTimeout/setInterval in background tabs to fire at most
+  // once per minute (sometimes less). A Web Worker runs on its own thread and
+  // is NOT subject to this throttling, so our 60-second polls keep firing even
+  // when the user has this tab in the background for hours.
+  //
+  // Architecture:
+  //   Worker ──tick every 1s──▶ main thread
+  //   Main thread checks elapsed time and calls doPoll when ≥60s have passed,
+  //   always aligned to the next clock :00 boundary.
+
+  const doPollRef = useRef(null); // stable ref so worker onmessage never captures stale closure
 
   const doPoll = useCallback(async (token, expiry) => {
+    if (isPollInFlightRef.current) return true; // skip if a poll is already running
+    isPollInFlightRef.current = true;
+    lastPollTimeRef.current = Date.now();        // record attempt time immediately
     try {
-      // FIX: 20s abort — prevents a slow/hanging backend from blocking all future polls forever
       const resp = await fetch(`${BACKEND_BASE}/api/process`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -477,64 +579,120 @@ export default function App() {
         if (prev.length && prev[prev.length - 1].timestamp === data.timestamp) return prev;
         return [...prev, data];
       });
-      setLastUpdated(data.timestamp); // FIX: use backend timestamp, not frontend clock
+      setLastUpdated(data.timestamp);
       setConnected(true);
       setStatusMsg('Live');
       setStatusType('live');
-      return true; // FIX: signal success to schedulePoll
+      isPollInFlightRef.current = false;
+      return true;
     } catch (err) {
       setStatusType('error');
       setStatusMsg(`Error: ${err.message}`);
-      return false; // FIX: signal failure so schedulePoll can retry
+      isPollInFlightRef.current = false;
+      return false;
     }
   }, []);
 
-  const schedulePoll = useCallback(() => {
-    if (!isPollingRef.current) return;
-    // FIX: align to clock — always fire at the next exact :00 second boundary
-    const msToNextMinute = 60_000 - (Date.now() % 60_000);
-    pollTimeoutRef.current = setTimeout(async () => {
+  // Keep doPollRef always pointing at the latest doPoll
+  doPollRef.current = doPoll;
+
+  // Create the Web Worker once on mount
+  useEffect(() => {
+    // Inline worker script — sends a 'tick' msg every 1000 ms.
+    // Workers run in their own OS thread: no tab-throttling applies.
+    const workerCode = `
+      let interval = null;
+      self.onmessage = (e) => {
+        if (e.data === 'start') {
+          if (interval) return;
+          interval = setInterval(() => self.postMessage('tick'), 1000);
+        } else if (e.data === 'stop') {
+          clearInterval(interval);
+          interval = null;
+        }
+      };
+    `;
+    const blob = new Blob([workerCode], { type: 'application/javascript' });
+    const url = URL.createObjectURL(blob);
+    const worker = new Worker(url);
+    workerRef.current = worker;
+
+    // ── tick handler ─────────────────────────────────────────────────────
+    worker.onmessage = () => {
       if (!isPollingRef.current) return;
-      const ok = await doPoll(tokenRef.current, expiryRef.current);
-      if (!ok && isPollingRef.current) {
-        // FIX: retry once after 10s if Upstox returned an error — covers brief API hiccups
-        // within the same minute window so no data point is permanently lost
-        await new Promise(r => setTimeout(r, 10_000));
-        if (isPollingRef.current) await doPoll(tokenRef.current, expiryRef.current);
+
+      const now = Date.now();
+      const elapsed = now - lastPollTimeRef.current;
+
+      // Fire when ≥ 58 s have elapsed (2 s tolerance for tick jitter).
+      // We also align to the next :00 boundary: only fire once the wall
+      // clock seconds are in the range [0–5] of a new minute OR if we
+      // are already overdue by more than 90 s (catch-up after deep sleep).
+      const wallSec = Math.floor(now / 1000) % 60;
+      const overdue = elapsed > 90_000;
+      const atBoundary = wallSec <= 5;
+
+      if (elapsed >= 58_000 && (atBoundary || overdue)) {
+        doPollRef.current?.(tokenRef.current, expiryRef.current).then(ok => {
+          // On failure: retry once after 10 s
+          if (!ok && isPollingRef.current) {
+            setTimeout(() => {
+              if (isPollingRef.current) {
+                doPollRef.current?.(tokenRef.current, expiryRef.current);
+              }
+            }, 10_000);
+          }
+        });
       }
-      schedulePoll(); // next poll at the next :00 boundary
-    }, msToNextMinute);
-  }, [doPoll]);
+    };
+
+    return () => {
+      worker.postMessage('stop');
+      worker.terminate();
+      URL.revokeObjectURL(url);
+      workerRef.current = null;
+    };
+  }, []);
 
   const startPolling = useCallback(async (token, expiry) => {
-    // FIX: cancel any running poll before starting a new one
-    clearTimeout(pollTimeoutRef.current);
     isPollingRef.current = false;
-    await new Promise(r => setTimeout(r, 0)); // flush
+    isPollInFlightRef.current = false;
+    workerRef.current?.postMessage('stop');
+
     isPollingRef.current = true;
     tokenRef.current = token;
     expiryRef.current = expiry;
+    // Reset last poll time so the worker fires at the next :00 boundary
+    lastPollTimeRef.current = Date.now() - 55_000; // causes first fire within ~5 s at boundary
     setStatusMsg('Loading history...');
     setStatusType('idle');
-    const historyData = await fetchHistory();
-    setPoints(historyData);
-    // FIX: no immediate doPoll — schedulePoll waits for the next :00 boundary
-    schedulePoll();
-  }, [fetchHistory, schedulePoll]);
 
-  useEffect(() => () => {
-    clearTimeout(pollTimeoutRef.current);
-    isPollingRef.current = false;
+    // Load history (10 s timeout so a slow backend doesn't stall startup forever)
+    try {
+      const resp = await fetch(`${BACKEND_BASE}/api/history`, {
+        signal: AbortSignal.timeout(10_000),
+      });
+      if (resp.ok) {
+        const data = await resp.json();
+        setPoints(Array.isArray(data) ? data : []);
+      }
+    } catch { /* history unavailable — start with empty chart */ }
+
+    workerRef.current?.postMessage('start');
   }, []);
 
-  // FIX: health check every 30s — show banner + auto-reconnect on recovery
+  useEffect(() => () => {
+    isPollingRef.current = false;
+    workerRef.current?.postMessage('stop');
+  }, []);
+
+  // Health check every 30 s — show banner + auto-reconnect when backend recovers
   useEffect(() => {
     const interval = setInterval(async () => {
       try {
         const r = await fetch(`${BACKEND_BASE}/health`, { signal: AbortSignal.timeout(5000) });
         if (r.ok) {
           if (failCountRef.current >= 2) {
-            // FIX: backend just recovered — reload history to fill the gap
             setBackendOffline(false);
             startPolling(tokenRef.current, expiryRef.current);
           }
@@ -550,21 +708,49 @@ export default function App() {
     return () => clearInterval(interval);
   }, [startPolling]);
 
-  // FIX: visibilitychange — when user returns to the tab after browser throttling,
-  // immediately poll + realign the schedule to the next :00 boundary
+  // Track when the tab was hidden so we can measure the gap on return
+  const hiddenAtRef = useRef(null);
+
+  // Visibility: when user returns to tab, check how long they were away.
+  //   < 2 min  → single doPoll (Worker already handled it, just refresh UI)
+  //   ≥ 2 min  → reload full history from DB to fill any gaps the user missed
+  //             (same as pressing Reconnect, but automatic)
   useEffect(() => {
-    const onVisible = () => {
-      if (document.visibilityState === 'visible' && isPollingRef.current) {
-        // Trigger an immediate catch-up poll, then reschedule to next :00
-        doPoll(tokenRef.current, expiryRef.current).then(() => {
-          clearTimeout(pollTimeoutRef.current);
-          schedulePoll();
-        });
+    const onVisibility = () => {
+      if (!isPollingRef.current) return;
+
+      if (document.visibilityState === 'hidden') {
+        hiddenAtRef.current = Date.now();
+        return;
+      }
+
+      // Tab became visible
+      const awayMs = hiddenAtRef.current ? Date.now() - hiddenAtRef.current : 0;
+      hiddenAtRef.current = null;
+
+      if (awayMs >= 2 * 60 * 1000) {
+        // Away for 2+ minutes — reload history from DB to fill gaps automatically
+        setStatusMsg('Reloading history...');
+        setStatusType('idle');
+        fetch(`${BACKEND_BASE}/api/history`, { signal: AbortSignal.timeout(10_000) })
+          .then(r => r.ok ? r.json() : [])
+          .then(data => {
+            if (Array.isArray(data) && data.length) setPoints(data);
+          })
+          .catch(() => { })
+          .finally(() => {
+            // Then do a live poll to add the latest point on top
+            doPollRef.current?.(tokenRef.current, expiryRef.current);
+          });
+      } else {
+        // Short absence — just fetch the latest point
+        doPollRef.current?.(tokenRef.current, expiryRef.current);
       }
     };
-    document.addEventListener('visibilitychange', onVisible);
-    return () => document.removeEventListener('visibilitychange', onVisible);
-  }, [doPoll, schedulePoll]);
+
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => document.removeEventListener('visibilitychange', onVisibility);
+  }, []);
 
   // ── Handlers ────────────────────────────────────────────────────────────
   const handleApiSubmit = (e) => {
