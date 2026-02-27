@@ -26,6 +26,53 @@ Formulas:
 from typing import Any
 
 
+def calculate_future_indicators(future_quote: dict) -> dict:
+    """
+    Compute Nifty Futures derived indicators from a raw quote dict
+    (as returned by upstox_client.fetch_nifty_future_quote).
+
+    Raw inputs (surfaced as-is):
+        fut_ltp            – Last Traded Price
+        fut_atp            – Average Trade Price / VWAP
+        fut_oi             – Open Interest (number of contracts)
+        fut_volume         – Volume (number of contracts)
+        fut_total_buy_qty  – Total bid / buy-side quantity
+        fut_total_sell_qty – Total ask / sell-side quantity
+
+    Derived (4 new indicators):
+        fut_oi_value_ltp   = fut_oi  × fut_ltp   (OI value at LTP)
+        fut_oi_value_atp   = fut_oi  × fut_atp   (OI value at ATP/VWAP)
+        fut_trade_val_ltp  = fut_vol × fut_ltp   (trade value at LTP)
+        fut_trade_val_atp  = fut_vol × fut_atp   (trade value at ATP/VWAP)
+    """
+    ltp    = float(future_quote.get("ltp",            0) or 0)
+    atp    = float(future_quote.get("atp",            0) or 0)
+    oi     = float(future_quote.get("oi",             0) or 0)
+    volume = float(future_quote.get("volume",         0) or 0)
+    buy_q  = float(future_quote.get("total_buy_qty",  0) or 0)
+    sell_q = float(future_quote.get("total_sell_qty", 0) or 0)
+
+    return {
+        # ── Raw future data ────────────────────────────────────────────────
+        "fut_ltp":            ltp,
+        "fut_atp":            atp,
+        "fut_oi":             oi,
+        "fut_volume":         volume,
+        "fut_total_buy_qty":  buy_q,
+        "fut_total_sell_qty": sell_q,
+
+        # ── Derived indicators ─────────────────────────────────────────────
+        # 1. Future OI value at LTP  = OI × LTP
+        "fut_oi_value_ltp":  oi * ltp,
+        # 2. Future OI value at ATP  = OI × ATP
+        "fut_oi_value_atp":  oi * atp,
+        # 3. Future Trade value at LTP = Volume × LTP
+        "fut_trade_val_ltp": volume * ltp,
+        # 4. Future Trade value at ATP = Volume × ATP
+        "fut_trade_val_atp": volume * atp,
+    }
+
+
 def _safe_float(val, default: float = 0.0) -> float:
     """Coerce a value to float; return default on failure."""
     try:

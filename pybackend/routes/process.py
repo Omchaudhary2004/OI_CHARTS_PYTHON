@@ -10,10 +10,11 @@ FIX: Now checks DB for scheduler-saved data before calling Upstox.
 
 from datetime import datetime, timezone
 from flask import Blueprint, request, jsonify
-from calculator      import calculate_indicators
+from calculator      import calculate_indicators, calculate_future_indicators
 from database        import (check_and_clear_for_url_change, save_snapshot,
                               get_latest_snapshot)
-from upstox_client   import fetch_option_chain
+from upstox_client   import (fetch_option_chain, fetch_nifty_future_quote,
+                              get_current_nifty_future)
 from logger          import log_error, log_to_file
 from session         import set_session  # FIX: update global session on every call
 
@@ -48,6 +49,22 @@ def _snapshot_to_response(row: dict) -> dict:
         "pe_chg_oi": row.get("pe_chg_oi"),
         "ce_vol":    row.get("ce_vol"),
         "pe_vol":    row.get("pe_vol"),
+        # ── Nifty Futures raw data ────────────────────────────────────
+        "fut_ltp":            row.get("fut_ltp"),
+        "fut_atp":            row.get("fut_atp"),
+        "fut_oi":             row.get("fut_oi"),
+        "fut_volume":         row.get("fut_volume"),
+        "fut_total_buy_qty":  row.get("fut_total_buy_qty"),
+        "fut_total_sell_qty": row.get("fut_total_sell_qty"),
+        # ── Nifty Futures derived indicators ──────────────────────────
+        # 1. Future OI value LTP  = OI × LTP
+        "fut_oi_value_ltp":  row.get("fut_oi_value_ltp"),
+        # 2. Future OI value ATP  = OI × ATP
+        "fut_oi_value_atp":  row.get("fut_oi_value_atp"),
+        # 3. Future Trade value LTP = Volume × LTP
+        "fut_trade_val_ltp": row.get("fut_trade_val_ltp"),
+        # 4. Future Trade value ATP = Volume × ATP
+        "fut_trade_val_atp": row.get("fut_trade_val_atp"),
     }
 
 
@@ -92,6 +109,30 @@ def process():
         ))
 
         ind = calculate_indicators(api_resp)
+
+        # ── Nifty Futures quote ────────────────────────────────────────────
+        try:
+            fut_contract = get_current_nifty_future()
+            fut_quote    = fetch_with_retry(
+                lambda: fetch_nifty_future_quote(
+                    instrument_key=fut_contract["instrument_key"],
+                    token=token if token else None,
+                )
+            )
+            fut_ind = calculate_future_indicators(fut_quote)
+            log_to_file(
+                f"[FUTURE] {fut_contract['trading_symbol']} "
+                f"ltp={fut_ind['fut_ltp']} oi={fut_ind['fut_oi']} "
+                f"oi_val_ltp={fut_ind['fut_oi_value_ltp']:.0f}"
+            )
+        except FileNotFoundError as e:
+            log_to_file(f"[FUTURE] BOD file missing — futures data skipped: {e}")
+            fut_ind = {}
+        except Exception as e:
+            log_error("POST /api/process – future quote", e)
+            fut_ind = {}  # non-fatal: option-chain data still saved
+
+        ind.update(fut_ind)  # merge future indicators into main indicator dict
         saved = save_snapshot(ind, api_resp)  # dedup inside: safe if scheduler beat us
 
         log_to_file(f"[SUCCESS] Data saved – id={saved['id']} ts={saved['timestamp']}")

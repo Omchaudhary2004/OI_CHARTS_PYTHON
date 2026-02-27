@@ -95,12 +95,31 @@ def init_db():
                 ce_vol                   REAL NOT NULL DEFAULT 0,
                 pe_vol                   REAL NOT NULL DEFAULT 0,
                 nifty_price              REAL NOT NULL DEFAULT 0,
+                -- Nifty Futures raw market data
+                fut_ltp                  REAL NOT NULL DEFAULT 0,
+                fut_atp                  REAL NOT NULL DEFAULT 0,
+                fut_oi                   REAL NOT NULL DEFAULT 0,
+                fut_volume               REAL NOT NULL DEFAULT 0,
+                fut_total_buy_qty        REAL NOT NULL DEFAULT 0,
+                fut_total_sell_qty       REAL NOT NULL DEFAULT 0,
+                -- Nifty Futures derived indicators
+                fut_oi_value_ltp         REAL NOT NULL DEFAULT 0,
+                fut_oi_value_atp         REAL NOT NULL DEFAULT 0,
+                fut_trade_val_ltp        REAL NOT NULL DEFAULT 0,
+                fut_trade_val_atp        REAL NOT NULL DEFAULT 0,
                 raw_json                 TEXT NOT NULL
             )
         """)
 
         # Graceful migration for existing DB
-        for col in ["total_ce_oi_value_2", "total_pe_oi_value_2", "diff_oi_value_2", "ratio_oi_value_2"]:
+        for col in [
+            "total_ce_oi_value_2", "total_pe_oi_value_2", "diff_oi_value_2", "ratio_oi_value_2",
+            # Nifty Futures columns added later
+            "fut_ltp", "fut_atp", "fut_oi", "fut_volume",
+            "fut_total_buy_qty", "fut_total_sell_qty",
+            "fut_oi_value_ltp", "fut_oi_value_atp",
+            "fut_trade_val_ltp", "fut_trade_val_atp",
+        ]:
             try:
                 cur.execute(f"ALTER TABLE snapshots ADD COLUMN {col} REAL NOT NULL DEFAULT 0")
             except Exception:
@@ -247,8 +266,12 @@ def save_snapshot(ind: dict, raw: dict) -> dict:
                 diff_oi_value_2, ratio_oi_value_2, diff_trade_value, test_value,
                 ce_oi, pe_oi, ce_chg_oi, pe_chg_oi,
                 ce_vol, pe_vol, nifty_price,
+                fut_ltp, fut_atp, fut_oi, fut_volume,
+                fut_total_buy_qty, fut_total_sell_qty,
+                fut_oi_value_ltp, fut_oi_value_atp,
+                fut_trade_val_ltp, fut_trade_val_atp,
                 raw_json
-            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
         """, (
             ts_str, date_str, ind["underlying"],
             ind["total_ce_oi_value"], ind["total_pe_oi_value"],
@@ -260,6 +283,11 @@ def save_snapshot(ind: dict, raw: dict) -> dict:
             ind["test_value"],
             ind["ce_oi"], ind["pe_oi"], ind["ce_chg_oi"], ind["pe_chg_oi"],
             ind["ce_vol"], ind["pe_vol"], ind["nifty_price"],
+            ind.get("fut_ltp", 0),            ind.get("fut_atp", 0),
+            ind.get("fut_oi", 0),             ind.get("fut_volume", 0),
+            ind.get("fut_total_buy_qty", 0),  ind.get("fut_total_sell_qty", 0),
+            ind.get("fut_oi_value_ltp", 0),   ind.get("fut_oi_value_atp", 0),
+            ind.get("fut_trade_val_ltp", 0),  ind.get("fut_trade_val_atp", 0),
             json.dumps(raw),
         ))
         row_id = cur.lastrowid
@@ -299,7 +327,11 @@ _INDICATOR_COLS = """
     diff_oi_value, ratio_oi_value, diff_oi_value_2, ratio_oi_value_2,
     diff_trade_value, test_value,
     ce_oi, pe_oi, ce_chg_oi, pe_chg_oi,
-    ce_vol, pe_vol, nifty_price
+    ce_vol, pe_vol, nifty_price,
+    fut_ltp, fut_atp, fut_oi, fut_volume,
+    fut_total_buy_qty, fut_total_sell_qty,
+    fut_oi_value_ltp, fut_oi_value_atp,
+    fut_trade_val_ltp, fut_trade_val_atp
 """
 
 
@@ -324,7 +356,11 @@ def get_all_history() -> list[dict]:
                    total_ce_trade_value, total_pe_trade_value,
                    diff_oi_value, ratio_oi_value, diff_oi_value_2, ratio_oi_value_2,
                    diff_trade_value, test_value,
-                   ce_oi, pe_oi, ce_chg_oi, pe_chg_oi, ce_vol, pe_vol
+                   ce_oi, pe_oi, ce_chg_oi, pe_chg_oi, ce_vol, pe_vol,
+                   fut_ltp, fut_atp, fut_oi, fut_volume,
+                   fut_total_buy_qty, fut_total_sell_qty,
+                   fut_oi_value_ltp, fut_oi_value_atp,
+                   fut_trade_val_ltp, fut_trade_val_atp
             FROM snapshots ORDER BY timestamp ASC
         """)
         return [dict(r) for r in cur.fetchall()]
@@ -342,7 +378,11 @@ def get_snapshots_for_export(date_str: str = None) -> list[dict]:
                    total_ce_trade_value, total_pe_trade_value,
                    diff_oi_value, ratio_oi_value, diff_oi_value_2, ratio_oi_value_2,
                    diff_trade_value, test_value,
-                   ce_oi, pe_oi, ce_chg_oi, pe_chg_oi, ce_vol, pe_vol
+                   ce_oi, pe_oi, ce_chg_oi, pe_chg_oi, ce_vol, pe_vol,
+                   fut_ltp, fut_atp, fut_oi, fut_volume,
+                   fut_total_buy_qty, fut_total_sell_qty,
+                   fut_oi_value_ltp, fut_oi_value_atp,
+                   fut_trade_val_ltp, fut_trade_val_atp
             FROM snapshots WHERE date = ? ORDER BY timestamp ASC
         """, (date_str,))
         return [dict(r) for r in cur.fetchall()]

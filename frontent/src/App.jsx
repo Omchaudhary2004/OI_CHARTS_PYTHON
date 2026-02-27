@@ -27,6 +27,17 @@ const BUILTIN_INDICATORS = [
   { value: 'ratio_oi_value_2', label: '10A. Ratio OI Value 2', color: '#fb8c00' },
   { value: 'diff_trade_value', label: '11. Diff Trade Value', color: '#9c27b0' },
   { value: 'test_value', label: '12. Test', color: '#4caf50' },
+  // ── Nifty Futures ──────────────────────────────────────────────────────────
+  { value: 'fut_ltp', label: 'F1. Future LTP', color: '#e91e63' },
+  { value: 'fut_atp', label: 'F2. Future ATP / VWAP', color: '#c2185b' },
+  { value: 'fut_oi', label: 'F3. Future OI', color: '#9c27b0' },
+  { value: 'fut_volume', label: 'F4. Future Volume', color: '#673ab7' },
+  { value: 'fut_total_buy_qty', label: 'F5. Future Total Buy Qty', color: '#00897b' },
+  { value: 'fut_total_sell_qty', label: 'F6. Future Total Sell Qty', color: '#e53935' },
+  { value: 'fut_oi_value_ltp', label: 'F7. Future OI Value (LTP)', color: '#ff5722' },
+  { value: 'fut_oi_value_atp', label: 'F8. Future OI Value (ATP)', color: '#f4511e' },
+  { value: 'fut_trade_val_ltp', label: 'F9. Future Trade Value (LTP)', color: '#795548' },
+  { value: 'fut_trade_val_atp', label: 'F10. Future Trade Value (ATP)', color: '#6d4c41' },
 ];
 
 const VARIABLES = [
@@ -45,6 +56,17 @@ const VARIABLES = [
   { name: 'ratio_oi_value_2', desc: 'Ratio OI Value 2 (CE2 ÷ PE2)' },
   { name: 'diff_trade_value', desc: 'Diff Trade Value (CE Trade − PE Trade)' },
   { name: 'test_value', desc: 'Test (Custom formula)' },
+  // ── Nifty Futures ──────────────────────────────────────────────────────────
+  { name: 'fut_ltp', desc: 'Future LTP (Last Traded Price)' },
+  { name: 'fut_atp', desc: 'Future ATP / VWAP (Average Traded Price)' },
+  { name: 'fut_oi', desc: 'Future OI (Open Interest, contracts)' },
+  { name: 'fut_volume', desc: 'Future Volume (contracts)' },
+  { name: 'fut_total_buy_qty', desc: 'Future Total Bid / Buy Qty' },
+  { name: 'fut_total_sell_qty', desc: 'Future Total Ask / Sell Qty' },
+  { name: 'fut_oi_value_ltp', desc: 'Future OI Value LTP = fut_oi × fut_ltp' },
+  { name: 'fut_oi_value_atp', desc: 'Future OI Value ATP = fut_oi × fut_atp' },
+  { name: 'fut_trade_val_ltp', desc: 'Future Trade Value LTP = fut_volume × fut_ltp' },
+  { name: 'fut_trade_val_atp', desc: 'Future Trade Value ATP = fut_volume × fut_atp' },
 ];
 
 // Suppress unused variable warning for LOT_SIZE (kept for future use)

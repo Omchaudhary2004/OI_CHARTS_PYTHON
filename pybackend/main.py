@@ -114,8 +114,9 @@ def scheduled_fetch():
       does not die and future jobs keep running.
     """
     from session import get_session, session_ready
-    from upstox_client import fetch_option_chain
-    from calculator import calculate_indicators
+    from upstox_client import (fetch_option_chain, fetch_nifty_future_quote,
+                                get_current_nifty_future)
+    from calculator import calculate_indicators, calculate_future_indicators
     from database import save_snapshot
 
     # Skip outside market hours — conserves API rate-limit quota
@@ -133,6 +134,30 @@ def scheduled_fetch():
             token=sess["token"],
         ))
         ind = calculate_indicators(api_resp)
+
+        # ── Nifty Futures quote (non-fatal if BOD file missing) ────────────
+        try:
+            fut_contract = get_current_nifty_future()
+            fut_quote    = fetch_with_retry(
+                lambda: fetch_nifty_future_quote(
+                    instrument_key=fut_contract["instrument_key"],
+                    token=sess["token"],
+                )
+            )
+            fut_ind = calculate_future_indicators(fut_quote)
+            log_to_file(
+                f"[SCHEDULER][FUTURE] {fut_contract['trading_symbol']} "
+                f"ltp={fut_ind['fut_ltp']} oi={fut_ind['fut_oi']} "
+                f"oi_val_ltp={fut_ind['fut_oi_value_ltp']:.0f}"
+            )
+            ind.update(fut_ind)
+        except FileNotFoundError:
+            log_to_file("[SCHEDULER][FUTURE] BOD file missing — futures data skipped")
+        except Exception as fe:
+            from logger import log_error
+            log_error("SCHEDULER – future quote", fe)
+            # Non-fatal: option-chain snapshot still saves
+
         result = save_snapshot(ind, api_resp)
         if result.get("already_existed"):
             log_to_file(f"[SCHEDULER] Dedup — snapshot for {result['timestamp']} already saved by frontend")
@@ -142,6 +167,7 @@ def scheduled_fetch():
         from logger import log_error
         log_error("SCHEDULER", e)
         # Do NOT re-raise — let the scheduler thread stay alive for the next minute
+
 
 
 def _start_scheduler():
