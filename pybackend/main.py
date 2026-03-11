@@ -94,6 +94,28 @@ def ping():
     return jsonify({"ok": True, "time": datetime.now(timezone.utc).isoformat()})
 
 
+@app.get("/api/futures-expiry")
+def futures_expiry():
+    """
+    Return the nearest-expiry Nifty Futures contract details from NSE.json.gz.
+    Used by the frontend navbar to display the current expiry.
+    """
+    try:
+        from upstox_client import get_current_nifty_future
+        fut = get_current_nifty_future()
+        expiry_dt = fut["expiry"]   # datetime object (local time)
+        return jsonify({
+            "ok": True,
+            "trading_symbol": fut["trading_symbol"],
+            "expiry_date": expiry_dt.strftime("%d %b %Y"),   # e.g. "30 Mar 2026"
+            "expiry_iso":  expiry_dt.strftime("%Y-%m-%d"),   # e.g. "2026-03-30"
+        })
+    except FileNotFoundError as e:
+        return jsonify({"ok": False, "error": str(e)}), 404
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
 # ── Register all route blueprints ─────────────────────────────────────────────
 register_routes(app)
 

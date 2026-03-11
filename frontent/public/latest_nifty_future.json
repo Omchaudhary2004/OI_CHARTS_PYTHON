@@ -1,0 +1,23 @@
+{
+    "weekly": false,
+    "segment": "NSE_FO",
+    "name": "NIFTY",
+    "exchange": "NSE",
+    "expiry": 1779820199000,
+    "instrument_type": "FUT",
+    "asset_symbol": "NIFTY",
+    "underlying_symbol": "NIFTY",
+    "instrument_key": "NSE_FO|66071",
+    "lot_size": 65,
+    "freeze_quantity": 1755.0,
+    "exchange_token": "66071",
+    "minimum_lot": 65,
+    "asset_key": "NSE_INDEX|Nifty 50",
+    "underlying_key": "NSE_INDEX|Nifty 50",
+    "tick_size": 10.0,
+    "asset_type": "INDEX",
+    "underlying_type": "INDEX",
+    "trading_symbol": "NIFTY FUT 26 MAY 26",
+    "strike_price": 0.0,
+    "qty_multiplier": 1.0
+}

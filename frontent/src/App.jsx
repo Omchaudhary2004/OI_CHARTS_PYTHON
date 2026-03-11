@@ -98,12 +98,21 @@ function splitDataByGaps(arr) {
   return segments.filter(s => s.length > 0);
 }
 
+// Market hours boundary helpers (IST minutes from midnight)
+const MARKET_OPEN_MIN = 9 * 60 + 15;  // 09:15
+const MARKET_CLOSE_MIN = 15 * 60 + 30; // 15:30
+
 function buildSeriesData(points, key, customFormula = null) {
   const MAX_SAFE = 90071992547409.91;
   const arr = points
     .map(p => {
       const utcDate = new Date(p.timestamp);
       const istDate = new Date(utcDate.getTime() + 5.5 * 60 * 60 * 1000);
+
+      // Filter: only include data within Indian market hours (09:15 – 15:30 IST)
+      const istMinutes = istDate.getUTCHours() * 60 + istDate.getUTCMinutes();
+      if (istMinutes < MARKET_OPEN_MIN || istMinutes > MARKET_CLOSE_MIN) return null;
+
       const t = Math.floor(istDate.getTime() / 1000);
       let v = customFormula ? evaluateFormula(customFormula, p) : Number(p[key] ?? 0);
       if (v === null || isNaN(t)) return null;
@@ -128,7 +137,10 @@ function formatPriceScale(value) {
     const m = n / 1_000_000;
     return (Math.abs(m) >= 1000 ? m.toFixed(0) : m.toFixed(1)) + 'M';
   }
-  return Math.abs(n) >= 1000 ? n.toFixed(0) : n.toFixed(2);
+  if (Math.abs(n) >= 1000) return n.toFixed(0);
+  if (Math.abs(n) >= 1) return n.toFixed(4);
+  // Small values (ratios, divisions < 1) — show up to 6 decimal places
+  return n.toFixed(6);
 }
 
 function formatTimestamp(unixSeconds) {
@@ -173,6 +185,9 @@ function useDualPaneChart(containerRef, { data1, color1, id1, data2, color2, id2
             enableResize: true,
           },
         },
+        localization: {
+          priceFormatter: formatPriceScale,
+        },
         grid: {
           vertLines: { color: '#f3f4f6' },
           horzLines: { color: '#f3f4f6' },
@@ -193,11 +208,13 @@ function useDualPaneChart(containerRef, { data1, color1, id1, data2, color2, id2
             style: 3,                       // large dashed — TradingView style
             labelBackgroundColor: '#1e293b',
           },
+          // Hide the native horzLine — it only appears in the active pane.
+          // We draw our own mirrored price lines on both panes instead,
+          // so both panes always show the crosshair level regardless of
+          // which pane the cursor is in.
           horzLine: {
-            color: '#b2b5be',
-            width: 1,
-            style: 3,
-            labelBackgroundColor: '#1e293b',
+            visible: false,
+            labelVisible: false,
           },
         },
         width: el.clientWidth,
@@ -340,9 +357,16 @@ function useDualPaneChart(containerRef, { data1, color1, id1, data2, color2, id2
           crosshairMarkerBorderColor: '#ffffff',
           crosshairMarkerBorderWidth: 2,
           crosshairMarkerBackgroundColor: color1,
+          priceFormat: {
+            type: 'custom',
+            formatter: formatPriceScale,
+          },
         }, 0);
         s.setData(seg);
         series1Ref.current.push(s);
+        // New anchor series — invalidate the stale price-line ref so the
+        // crosshair handler re-creates it on the new series object.
+        priceLine1Ref.current = null;
       }
     });
 
@@ -369,6 +393,7 @@ function useDualPaneChart(containerRef, { data1, color1, id1, data2, color2, id2
     if (!hasPane2 || !data2.length) {
       series2Ref.current.forEach(s => { try { chart.removeSeries(s); } catch { } });
       series2Ref.current = [];
+      priceLine2Ref.current = null; // series gone, price-line ref is now stale
       prevId2.current = id2;
 
       // Only fire the forced resize ONCE — on the exact moment hasPane2 goes
@@ -398,6 +423,9 @@ function useDualPaneChart(containerRef, { data1, color1, id1, data2, color2, id2
     if (indicatorChanged) {
       series2Ref.current.forEach(s => { try { chart.removeSeries(s); } catch { } });
       series2Ref.current = [];
+      // Stale price-line ref must be cleared so the crosshair handler
+      // re-creates it on the new anchor series after the indicator swap.
+      priceLine2Ref.current = null;
     }
 
     const segments = splitDataByGaps(data2);
@@ -429,6 +457,10 @@ function useDualPaneChart(containerRef, { data1, color1, id1, data2, color2, id2
             crosshairMarkerBorderColor: '#ffffff',
             crosshairMarkerBorderWidth: 2,
             crosshairMarkerBackgroundColor: color2,
+            priceFormat: {
+              type: 'custom',
+              formatter: formatPriceScale,
+            },
           },
           1,
         );
@@ -494,6 +526,20 @@ export default function App() {
   const [statusMsg, setStatusMsg] = useState('Not connected');
   const [statusType, setStatusType] = useState('idle');
   const [lastUpdated, setLastUpdated] = useState(new Date().toISOString());
+  const [futuresExpiry, setFuturesExpiry] = useState('');
+
+  // Fetch the nearest Nifty Futures expiry from the backend (reads NSE.json.gz live)
+  useEffect(() => {
+    fetch(`${BACKEND_BASE}/api/futures-expiry`)
+      .then(r => r.json())
+      .then(d => {
+        if (d?.ok && d.expiry_date) {
+          setFuturesExpiry(d.expiry_date);   // e.g. "30 Mar 2026"
+        }
+      })
+      .catch(() => { });
+  }, []);
+
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [newIndName, setNewIndName] = useState('');
@@ -849,6 +895,11 @@ export default function App() {
       diff_oi_value: 100000, ratio_oi_value: 1,
       diff_oi_value_2: 0, ratio_oi_value_2: 1,
       diff_trade_value: 100000, test_value: 100,
+      // Futures fields — non-zero so division formulas don't produce 0/0 = NaN
+      fut_ltp: 100, fut_atp: 99, fut_oi: 1000000, fut_volume: 500000,
+      fut_total_buy_qty: 300000, fut_total_sell_qty: 200000,
+      fut_oi_value_ltp: 100000000, fut_oi_value_atp: 99000000,
+      fut_trade_val_ltp: 50000000, fut_trade_val_atp: 49500000,
     };
     if (evaluateFormula(formula, testPoint) === null) {
       setAddError('Formula error – check syntax and variable names'); return;
@@ -862,6 +913,11 @@ export default function App() {
       diff_oi_value: 0, ratio_oi_value: 1,
       diff_oi_value_2: 0, ratio_oi_value_2: 1,
       diff_trade_value: 0, test_value: 0,
+      // Futures fields — realistic values so overflow check works correctly
+      fut_ltp: 25000, fut_atp: 24975, fut_oi: 15000000, fut_volume: 9000000,
+      fut_total_buy_qty: 900000, fut_total_sell_qty: 750000,
+      fut_oi_value_ltp: 375000000000, fut_oi_value_atp: 374625000000,
+      fut_trade_val_ltp: 225000000000, fut_trade_val_atp: 224775000000,
     };
     const testResult = evaluateFormula(formula, testPoint2);
     if (testResult !== null && Math.abs(testResult) > 90071992547409.91) {
@@ -1029,8 +1085,17 @@ export default function App() {
           <span className="brand-name">OI Chart</span>
           {lastUpdated && (
             <span className="last-update">
-              {new Date(new Date(lastUpdated).getTime() + 5.5 * 60 * 60 * 1000)
-                .toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+              {new Date(lastUpdated).toLocaleTimeString('en-IN', {
+                hour: '2-digit', minute: '2-digit', second: '2-digit',
+                timeZone: 'Asia/Kolkata',
+              })}
+            </span>
+          )}
+          {futuresExpiry && (
+            <span className="futures-expiry-badge" title="Nifty Futures Expiry Date">
+              <span className="futures-expiry-icon">📅</span>
+              <span className="futures-expiry-label">Expiry</span>
+              <span className="futures-expiry-date">{futuresExpiry}</span>
             </span>
           )}
         </div>
