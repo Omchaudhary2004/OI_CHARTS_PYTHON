@@ -820,6 +820,56 @@ export default function App() {
     return () => document.removeEventListener('visibilitychange', onVisibility);
   }, []);
 
+  // ── Auto-trigger at 9:15:00 IST (market open) ───────────────────────────
+  // Computes ms until the next 9:15:00 IST and fires an immediate poll at
+  // that exact moment so the first data point appears without any manual
+  // Reconnect press.
+  useEffect(() => {
+    let timeoutId = null;
+
+    function msUntilNext915IST() {
+      const nowUtcMs = Date.now();
+      // Current IST time components
+      const ist = new Date(nowUtcMs + 5.5 * 60 * 60 * 1000);
+      const hh = ist.getUTCHours();
+      const mm = ist.getUTCMinutes();
+      const ss = ist.getUTCSeconds();
+      const ms = ist.getUTCMilliseconds();
+
+      // ms elapsed today since 9:15:00 IST
+      const elapsedSince915 = ((hh - 9) * 60 + (mm - 15)) * 60_000 + ss * 1000 + ms;
+
+      if (elapsedSince915 < 0) {
+        // 9:15 hasn't happened yet today — fire at 9:15 today
+        return -elapsedSince915;
+      } else {
+        // 9:15 already passed today — fire at 9:15 tomorrow
+        return 24 * 60 * 60_000 - elapsedSince915;
+      }
+    }
+
+    function scheduleNext() {
+      const delay = msUntilNext915IST();
+      timeoutId = setTimeout(() => {
+        // Only act if polling is active (user is connected)
+        if (isPollingRef.current) {
+          // Reset lastPollTimeRef to far-past so the worker fires in its next
+          // tick (within 1 s), giving us an immediate data point at 9:15.
+          lastPollTimeRef.current = 0;
+          setStatusMsg('Market open — fetching first data point…');
+          setStatusType('idle');
+          // Also fire immediately without waiting for the worker tick
+          doPollRef.current?.(tokenRef.current, expiryRef.current);
+        }
+        // Reschedule for the next day's 9:15
+        scheduleNext();
+      }, delay);
+    }
+
+    scheduleNext();
+    return () => { if (timeoutId) clearTimeout(timeoutId); };
+  }, []);
+
   // ── Handlers ────────────────────────────────────────────────────────────
   const handleApiSubmit = (e) => {
     e.preventDefault();
